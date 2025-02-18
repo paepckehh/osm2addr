@@ -52,18 +52,18 @@ func Parse(file *os.File, worker int) error {
 		go func() {
 			w, tags, addrComplete, addrCompleteDE, nodes, objects := i, 0, 0, 0, 0, 0
 			cc, country, countryErr := make(map[string]bool), 0, 0
-			cDE, city, cityErr := make(map[string]bool), 0, 0
-			sDE, street, streetErr := make(map[string]bool), 0, 0
-			pDE, postcode, postcodeErr := make(map[string]bool), 0, 0
+			c, city, cityErr := make(map[string]bool), 0, 0
+			s, street, streetErr := make(map[string]bool), 0, 0
+			p, postcode, postcodeErr := make(map[string]bool), 0, 0
 			postcode2city, postcode2street := make(map[string]map[string]bool), make(map[string]map[string]bool)
 			city2postcode, city2street := make(map[string]map[string]bool), make(map[string]map[string]bool)
 			for {
 				objs, err := d.Decode()
 				if err != nil {
 					fmt.Printf("\naddr:country:uniq    %v  addr:country:valid %v  addr:country:err %v", hu(len(cc)), hu(country), hu(countryErr))
-					fmt.Printf("\naddr:de:city:uniq    %v  addr:city:valid    %v  addr:city:err    %v", hu(len(cDE)), hu(city), hu(cityErr))
-					fmt.Printf("\naddr:de:street:uniq  %v  addr:street:valid  %v  addr:street:err  %v", hu(len(sDE)), hu(street), hu(streetErr))
-					fmt.Printf("\naddr:de:postcode:uniq%v  addr:postcode:valid%v  addr:postcode:err%v", hu(len(pDE)), hu(postcode), hu(postcodeErr))
+					fmt.Printf("\naddr:de:city:uniq    %v  addr:city:valid    %v  addr:city:err    %v", hu(len(c)), hu(city), hu(cityErr))
+					fmt.Printf("\naddr:de:street:uniq  %v  addr:street:valid  %v  addr:street:err  %v", hu(len(s)), hu(street), hu(streetErr))
+					fmt.Printf("\naddr:de:postcode:uniq%v  addr:postcode:valid%v  addr:postcode:err%v", hu(len(p)), hu(postcode), hu(postcodeErr))
 					fmt.Printf("\naddr:de:complete     %v  addr:complete      %v", hu(addrCompleteDE), hu(addrComplete))
 					fmt.Printf("\n\nWorker#%v Processed => Objects:%v => Nodes:%v => AddrTags:%v => ExitCode:%v\n", w, hu(objects), hu(nodes), hu(tags), err.Error())
 					if err.Error() != "EOF" {
@@ -145,14 +145,14 @@ func Parse(file *os.File, worker int) error {
 									case "DE":
 										// scope DE
 										addrCompleteDE++
-										if !pDE[tagPostcode] {
-											pDE[tagPostcode] = true
+										if !p[tagPostcode] {
+											p[tagPostcode] = true
 										}
-										if !cDE[tagCity] {
-											cDE[tagCity] = true
+										if !c[tagCity] {
+											c[tagCity] = true
 										}
-										if !sDE[tagStreet] {
-											sDE[tagStreet] = true
+										if !s[tagStreet] {
+											s[tagStreet] = true
 										}
 										// scope DE:postcode
 										// scope DE:postcode:city
