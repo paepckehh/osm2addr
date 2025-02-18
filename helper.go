@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 )
@@ -30,4 +31,20 @@ func writeJsonFile(filename string, inMap map[string]map[string]bool) {
 	if err := os.WriteFile(filepath.Join(folder, filename), j, 0666); err != nil {
 		panic(err)
 	}
+}
+
+func tryNormaliseGermanCity(content string) string {
+	content = strings.ReplaceAll(content, " a.d. ", " an der ")
+	content = strings.ReplaceAll(content, " a.d.", " an der ")
+	content = strings.ReplaceAll(content, " i. ", " im ")
+	content = strings.ReplaceAll(content, " i.", " im ")
+	content = strings.ReplaceAll(content, " a. ", " am ")
+	content = strings.ReplaceAll(content, " a.", " am ")
+	content = strings.ReplaceAll(content, " b. ", " bei ")
+	content = strings.ReplaceAll(content, " b.", " bei ")
+	content = strings.ReplaceAll(content, " v.d. ", " von der ")
+	content = strings.ReplaceAll(content, " v. d. ", " von der ")
+	content = strings.ReplaceAll(content, " v.d.", " von der ")
+	content = strings.ReplaceAll(content, " v. d.", " von der ")
+	return content
 }

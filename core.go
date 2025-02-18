@@ -145,6 +145,9 @@ func Parse(file *os.File, worker int) error {
 									case "DE":
 										// scope DE
 										addrCompleteDE++
+										if strings.Contains(tagCity, ".") {
+											tagCity = tryNormaliseGermanCity(tagCity)
+										}
 										if !p[tagPostcode] {
 											p[tagPostcode] = true
 										}
