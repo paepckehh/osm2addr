@@ -36,6 +36,15 @@ func makeCapitalLetter(in string) string {
 	return string(unicode.ToUpper(r)) + in[size:]
 }
 
+// camelCaseSeps ...
+func camelCaseSeps(in string) string {
+	out := camelCaseSep(in, "/")
+	out = camelCaseSep(out, "-")
+	out = camelCaseSep(out, ".")
+	out = camelCaseSep(out, "(")
+	return out
+}
+
 // camelCaseSep
 func camelCaseSep(in, sep string) string {
 	if strings.Contains(in, sep) {

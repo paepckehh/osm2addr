@@ -18,15 +18,6 @@ func (t *OSMTag) uniform() {
 	}
 }
 
-// camelCaseSeps ...
-func camelCaseSeps(in string) string {
-	out := camelCaseSep(in, "/")
-	out = camelCaseSep(out, "-")
-	out = camelCaseSep(out, ".")
-	out = camelCaseSep(out, "(")
-	return out
-}
-
 // camelCase...
 func camelCase(in string) string {
 	var out string
