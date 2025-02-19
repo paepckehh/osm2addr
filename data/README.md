@@ -1,5 +1,5 @@
 # osm2addr
-## Convert OSM OpenStreetMap Open Source Data into Json Address Validation DB Tables
+## Convert OSM OpenStreetMap Open Source Data into Json Address Validation DB Tables (MongoDB,..)
 ## https://download.geofabrik.de
 ### HOW TO USE (Example OSM DATA GERMANY) 
 ```Shell 
