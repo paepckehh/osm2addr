@@ -12,30 +12,30 @@ import (
 	"paepcke.de/osm2addr/internal/pbf"
 )
 
-type AddrDB struct {
-	CC []Country
+// Target ...
+type Target struct {
+	Worker   int
+	Country  string
+	File     *os.File
+	FileName string
 }
 
-type Country struct {
-	CountryCode string
-	DailCodes   []int32
-	PO          []PostCodes
+// osmTag is a collection of osm tags:add<r
+type osmTag struct {
+	country  string
+	city     string
+	street   string
+	postcode string
 }
 
-type PostCodes struct {
-	PostCode string
-	Cities   []string
-	Streets  []string
-}
-
-func Parse(file *os.File, worker int) error {
+func Parse(target *Target) error {
 
 	// init
 	var wg sync.WaitGroup
 	var globalErrCode error
 
 	// osm decoder
-	d, err := pbf.NewDecoder(context.Background(), file)
+	d, err := pbf.NewDecoder(context.Background(), target.File)
 	if err != nil {
 		return err
 	}
@@ -47,10 +47,10 @@ func Parse(file *os.File, worker int) error {
 	fmt.Printf("\nOSM:File:Repl:TS  # %v\n", d.Header.OsmosisReplicationTimestamp)
 
 	// spin up threads
-	for i := 0; i < worker; i++ {
+	for i := 0; i < target.Worker; i++ {
 		wg.Add(1)
 		go func() {
-			w, tags, addrComplete, addrCompleteDE, nodes, objects := i, 0, 0, 0, 0, 0
+			w, tags, addrComplete, addrCompleteCC, nodes, objects := i, 0, 0, 0, 0, 0
 			cc, country, countryErr := make(map[string]bool), 0, 0
 			c, city, cityErr := make(map[string]bool), 0, 0
 			s, street, streetErr := make(map[string]bool), 0, 0
@@ -60,11 +60,11 @@ func Parse(file *os.File, worker int) error {
 			for {
 				objs, err := d.Decode()
 				if err != nil {
-					fmt.Printf("\naddr:country:uniq    %v  addr:country:valid %v  addr:country:err %v", hu(len(cc)), hu(country), hu(countryErr))
-					fmt.Printf("\naddr:de:city:uniq    %v  addr:city:valid    %v  addr:city:err    %v", hu(len(c)), hu(city), hu(cityErr))
-					fmt.Printf("\naddr:de:street:uniq  %v  addr:street:valid  %v  addr:street:err  %v", hu(len(s)), hu(street), hu(streetErr))
-					fmt.Printf("\naddr:de:postcode:uniq%v  addr:postcode:valid%v  addr:postcode:err%v", hu(len(p)), hu(postcode), hu(postcodeErr))
-					fmt.Printf("\naddr:de:complete     %v  addr:complete      %v", hu(addrCompleteDE), hu(addrComplete))
+					fmt.Printf("\naddr:country:uniq        %v  addr:all:country:valid %v  addr:country:err %v", hu(len(cc)), hu(country), hu(countryErr))
+					fmt.Printf("\naddr:target:city:uniq    %v  addr:all:city:valid    %v  addr:city:err    %v", hu(len(c)), hu(city), hu(cityErr))
+					fmt.Printf("\naddr:target:street:uniq  %v  addr:all:street:valid  %v  addr:street:err  %v", hu(len(s)), hu(street), hu(streetErr))
+					fmt.Printf("\naddr:target:postcode:uniq%v  addr:all:postcode:valid%v  addr:postcode:err%v", hu(len(p)), hu(postcode), hu(postcodeErr))
+					fmt.Printf("\naddr:target:records      %v  addr:all:recodrs       %v", hu(addrCompleteCC), hu(addrComplete))
 					fmt.Printf("\n\nWorker#%v Processed => Objects:%v => Nodes:%v => AddrTags:%v => ExitCode:%v\n", w, hu(objects), hu(nodes), hu(tags), err.Error())
 					if err.Error() != "EOF" {
 						globalErrCode = err
@@ -78,114 +78,111 @@ func Parse(file *os.File, worker int) error {
 						nodes++
 						n := obj.(*model.Node)
 						if len(n.Tags) > 0 {
-							tagCountry, tagPostcode, tagStreet, tagCity := "", "", "", ""
-							// fmt.Printf("\n%v\n", n.Tags)
+							t := osmTag{} // parse new tag set
 							for tag, content := range n.Tags {
 								tags++
-								if len(tag) > 8 {
-									if tag[:5] == "addr:" {
-										addrTag := strings.Split(tag, ":")
-										if len(addrTag) > 1 {
-											switch addrTag[1] {
-											case "country":
-												country++
-												if len(content) != 2 {
-													countryErr++
-													continue
-												}
-												tagCountry = content
-											case "street":
-												street++
-												l := len(content)
-												if l > 3 && l > 256 {
-													streetErr++
-													continue
-												}
-												tagStreet = content
-											case "city":
-												city++
-												l := len(content)
-												if l > 3 && l > 256 {
-													cityErr++
-													continue
-												}
-												tagCity = content
-											case "postcode":
-												postcode++
-												l := len(content)
-												pInt, err := strconv.Atoi(content)
-												if err != nil {
-													postcodeErr++
-													continue
-												}
-												pStr := strconv.Itoa(pInt)
-												l = len(pStr)
-												switch l {
-												case 5:
-												case 4:
-													pStr = "0" + pStr
-												default:
-													postcodeErr++
-													continue
-												}
-												tagPostcode = pStr
+								if len(tag) > 8 && tag[:5] == "addr:" {
+									addrTag := strings.Split(tag, ":")
+									if len(addrTag) > 1 {
+										switch addrTag[1] {
+										case "country":
+											country++
+											if len(content) != 2 {
+												countryErr++
+												continue
 											}
-
+											if content != strings.ToUpper(content) {
+												countryErr++
+												continue
+											}
+											t.country = content
+										case "street":
+											street++
+											l := len(content)
+											if l > 3 && l > 256 {
+												streetErr++
+												continue
+											}
+											t.street = content
+										case "city":
+											city++
+											l := len(content)
+											if l > 3 && l > 256 {
+												cityErr++
+												continue
+											}
+											t.city = content
+										case "postcode":
+											postcode++
+											l := len(content)
+											pInt, err := strconv.Atoi(content)
+											if err != nil {
+												postcodeErr++
+												continue
+											}
+											pStr := strconv.Itoa(pInt)
+											l = len(pStr)
+											switch l {
+											case 5:
+											case 4:
+											default:
+												postcodeErr++
+												continue
+											}
+											t.postcode = pStr
 										}
+
 									}
 								}
 							}
-							if tagCountry != "" {
-								if !cc[tagCountry] {
-									cc[tagCountry] = true
+							// validate tag set
+							if t.country != "" {
+								if !cc[t.country] {
+									cc[t.country] = true
 								}
-								if tagPostcode != "" && tagStreet != "" && tagCity != "" {
+								if t.postcode != "" && t.street != "" && t.city != "" {
 									addrComplete++
-									switch tagCountry {
-									case "DE":
-										// scope DE
-										addrCompleteDE++
-										if strings.Contains(tagCity, ".") {
-											tagCity = tryNormaliseGermanCity(tagCity)
+									if t.country == target.Country {
+										addrCompleteCC++
+										t.uniform()
+										if !p[t.postcode] {
+											p[t.postcode] = true
 										}
-										if !p[tagPostcode] {
-											p[tagPostcode] = true
+										if !c[t.city] {
+											c[t.city] = true
 										}
-										if !c[tagCity] {
-											c[tagCity] = true
+										if !s[t.street] {
+											s[t.street] = true
 										}
-										if !s[tagStreet] {
-											s[tagStreet] = true
+										// scope CC:postcode
+										// scope CC:postcode:city
+										if _, ok := postcode2city[t.postcode]; !ok {
+											postcode2city[t.postcode] = make(map[string]bool)
 										}
-										// scope DE:postcode
-										// scope DE:postcode:city
-										if _, ok := postcode2city[tagPostcode]; !ok {
-											postcode2city[tagPostcode] = make(map[string]bool)
+										if !postcode2city[t.postcode][t.city] {
+											postcode2city[t.postcode][t.city] = true
 										}
-										if !postcode2city[tagPostcode][tagCity] {
-											postcode2city[tagPostcode][tagCity] = true
+										// scope CC:postcode:street
+										if _, ok := postcode2street[t.postcode]; !ok {
+											postcode2street[t.postcode] = make(map[string]bool)
 										}
-										// scope DE:postcode:street
-										if _, ok := postcode2street[tagPostcode]; !ok {
-											postcode2street[tagPostcode] = make(map[string]bool)
+										if !postcode2street[t.postcode][t.street] {
+											postcode2street[t.postcode][t.street] = true
 										}
-										if !postcode2street[tagPostcode][tagStreet] {
-											postcode2street[tagPostcode][tagStreet] = true
+										// scope CC:city
+										// scope CC:city:postcode
+										if _, ok := city2postcode[t.city]; !ok {
+											city2postcode[t.city] = make(map[string]bool)
 										}
-										// scope DE:city
-										// scope DE:city:postcode
-										if _, ok := city2postcode[tagCity]; !ok {
-											city2postcode[tagCity] = make(map[string]bool)
+										if !city2postcode[t.city][t.postcode] {
+											city2postcode[t.city][t.postcode] = true
 										}
-										if !city2postcode[tagCity][tagPostcode] {
-											city2postcode[tagCity][tagPostcode] = true
+										// scope CC:city:street
+										if _, ok := city2street[t.city]; !ok {
+											city2street[t.city] = make(map[string]bool)
 										}
-										// scope DE:city:street
-										if _, ok := city2street[tagCity]; !ok {
-											city2street[tagCity] = make(map[string]bool)
-										}
-										if !city2street[tagCity][tagStreet] {
-											city2street[tagCity][tagStreet] = true
+										if !city2street[t.city][t.street] {
+											city2street[t.city][t.street] = true
 										}
 									}
 								}
@@ -198,10 +195,10 @@ func Parse(file *os.File, worker int) error {
 					}
 				}
 			}
-			writeJsonFile("postcode2city.json", postcode2city)
-			writeJsonFile("postcode2street.json", postcode2street)
-			writeJsonFile("city2postcode.json", city2postcode)
-			writeJsonFile("city2street.json", city2street)
+			writeJsonFile(target.Country, "postcode2city.json", postcode2city)
+			writeJsonFile(target.Country, "postcode2street.json", postcode2street)
+			writeJsonFile(target.Country, "city2postcode.json", city2postcode)
+			writeJsonFile(target.Country, "city2street.json", city2street)
 			wg.Done()
 		}()
 	}
