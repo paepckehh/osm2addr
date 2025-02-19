@@ -1,2 +1,2 @@
-# OSM OpenStreetMap Open Source Data 
-### https://download.geofabrik.de
+# osm2addr
+# Convert OSM OpenStreetMap Open Source Data into Json Address Validation DB Tables
