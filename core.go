@@ -20,8 +20,8 @@ type Target struct {
 	FileName string
 }
 
-// osmTag is a collection of osm tags:add<r
-type osmTag struct {
+// OSMTag is a collection of osm tags:add<r
+type OSMTag struct {
 	country  string
 	city     string
 	street   string
@@ -78,7 +78,7 @@ func Parse(target *Target) error {
 						nodes++
 						n := obj.(*model.Node)
 						if len(n.Tags) > 0 {
-							t := osmTag{} // parse new tag set
+							t := OSMTag{} // parse new tag set
 							for tag, content := range n.Tags {
 								tags++
 								if len(tag) > 8 && tag[:5] == "addr:" {

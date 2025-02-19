@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/dustin/go-humanize"
 )
@@ -19,6 +22,36 @@ func hu(in int) string {
 		return h
 	}
 
+}
+
+// makeCapitalLetter ....
+func makeCapitalLetter(in string) string {
+	if len(in) < 1 {
+		return ""
+	}
+	r, size := utf8.DecodeRuneInString(in)
+	if r == utf8.RuneError {
+		panic("internal utf8 error")
+	}
+	return string(unicode.ToUpper(r)) + in[size:]
+}
+
+// camelCaseSep
+func camelCaseSep(in, sep string) string {
+	if strings.Contains(in, sep) {
+		var out string
+		parts := strings.Split(in, sep)
+		for n, p := range parts {
+			if n == 0 {
+				out = p
+				continue
+			}
+			p = makeCapitalLetter(p)
+			out = out + sep + p
+		}
+		return out
+	}
+	return in
 }
 
 // writeJsonFile ...

@@ -1,14 +1,11 @@
 package osm2addr
 
 import (
-	"fmt"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 )
 
 // uniform tag
-func (t *osmTag) uniform() {
+func (t *OSMTag) uniform() {
 	switch t.country {
 	case "DE":
 		if strings.Contains(t.city, ".") {
@@ -21,18 +18,6 @@ func (t *osmTag) uniform() {
 	}
 }
 
-// makeCapitalLetter ....
-func makeCapitalLetter(in string) string {
-	if len(in) < 1 {
-		return ""
-	}
-	r, size := utf8.DecodeRuneInString(in)
-	if r == utf8.RuneError {
-		panic("internal utf8 error")
-	}
-	return string(unicode.ToUpper(r)) + in[size:]
-}
-
 // camelCaseSeps ...
 func camelCaseSeps(in string) string {
 	out := camelCaseSep(in, "/")
@@ -40,24 +25,6 @@ func camelCaseSeps(in string) string {
 	out = camelCaseSep(out, ".")
 	out = camelCaseSep(out, "(")
 	return out
-}
-
-// camelCaseSep
-func camelCaseSep(in, sep string) string {
-	if strings.Contains(in, sep) {
-		var out string
-		parts := strings.Split(in, sep)
-		for n, p := range parts {
-			if n == 0 {
-				out = p
-				continue
-			}
-			p = makeCapitalLetter(p)
-			out = out + sep + p
-		}
-		return out
-	}
-	return in
 }
 
 // camelCase...
@@ -107,9 +74,6 @@ func camelCase(in string) string {
 			}
 		}
 		out = out + " " + p
-	}
-	if out != in {
-		fmt.Printf("\n[CamelCased]%v=>%v", in, out)
 	}
 	return out
 }
