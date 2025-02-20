@@ -1,0 +1,43 @@
+builds:
+  -
+    id: "osm2addr"
+    binary: osm2addr
+    main: ./cmd/osm2addr/main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - freebsd
+      - darwin
+      - netbsd
+      - openbsd
+      - windows
+    goarch:
+      - amd64
+      - arm64
+archives:
+  -
+    id: osm2addr-binaries
+    name_template: "osm2addr-{{ .Os }}_{{ .Arch }}_{{ .Version }}"
+    files:
+      - LICENSE
+      - README.md
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+nfpms:
+  -
+    file_name_template: "osm2addr_package_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    vendor: Michael Paepcke
+    homepage: https://paepcke.de/osm2addr
+    maintainer: Michael Paepcke <git@paepcke.de>
+    description: osm2addr
+    license: BSD 3-Clause
+    formats:
+      - deb
+      - rpm
