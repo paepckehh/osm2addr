@@ -11,6 +11,19 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+// validDE CharacterMap
+var validDE = [21]string{"Ä", "Ö", "Ü", "ä", "ö", "ü", "ß", "é", "è", "á", "ó", "ë", "ê", "š", "ł", "ć", "ú", "Ž", "Š"}
+
+// isASCII ...
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
+}
+
 // hu print large number readable for humans and fixed lenght
 func hu(in int) string {
 	h := humanize.Comma(int64(in))

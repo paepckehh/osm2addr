@@ -11,15 +11,15 @@ func (t *OSMTag) uniform() {
 		if strings.Contains(t.city, ".") {
 			t.city = tryNormCityDE(t.city)
 		}
-		t.city = camelCase(t.city)
+		t.city = camelCaseCityDE(t.city)
 		if len(t.postcode) == 4 {
 			t.postcode = "0" + t.postcode
 		}
 	}
 }
 
-// camelCase...
-func camelCase(in string) string {
+// camelCaseCityDE...
+func camelCaseCityDE(in string) string {
 	var out string
 	lower := strings.ToLower(in)
 	parts := strings.Split(lower, " ")

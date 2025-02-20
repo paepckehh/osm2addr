@@ -73,13 +73,12 @@ func Parse(target *Target) error {
 				}
 				for _, obj := range objs {
 					objects++
-					switch obj.(type) {
+					switch o := obj.(type) {
 					case *model.Node:
 						nodes++
-						n := obj.(*model.Node)
-						if len(n.Tags) > 0 {
-							t := OSMTag{} // parse new tag set
-							for tag, content := range n.Tags {
+						if len(o.Tags) > 0 {
+							t := OSMTag{} // new tag set
+							for tag, content := range o.Tags {
 								tags++
 								if len(tag) > 8 && tag[:5] == "addr:" {
 									addrTag := strings.Split(tag, ":")
@@ -114,14 +113,13 @@ func Parse(target *Target) error {
 											t.city = content
 										case "postcode":
 											postcode++
-											l := len(content)
 											pInt, err := strconv.Atoi(content)
 											if err != nil {
 												postcodeErr++
 												continue
 											}
 											pStr := strconv.Itoa(pInt)
-											l = len(pStr)
+											l := len(pStr)
 											switch l {
 											case 5:
 											case 4:
@@ -195,6 +193,7 @@ func Parse(target *Target) error {
 					}
 				}
 			}
+			// write json mapping tables
 			writeJsonFile(target.Country, "postcode2city.json", postcode2city)
 			writeJsonFile(target.Country, "postcode2street.json", postcode2street)
 			writeJsonFile(target.Country, "city2postcode.json", city2postcode)
