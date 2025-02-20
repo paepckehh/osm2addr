@@ -19,3 +19,5 @@ curl -O https://download.geofabrik.de/europe/germany-latest.osm.pbf
 go run paepcke.de/osm2addr/cmd/osm2addr@latest DE germany-latest.osm.pbf
 ls -la json/DE
 ```
+### FEATURES
+- fast: extracts, analyzes and normalizes around 500.000.000 OSM Nodes / Minute (mid-range consumer level laptop)
