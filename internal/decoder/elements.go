@@ -66,23 +66,6 @@ func (c *blockContext) decodeDenseNodes(nodes *protobuf.DenseNodes) []model.Obje
 	return elements
 }
 
-func (c *blockContext) decodeMembers(node *protobuf.Relation) []model.Member {
-	memids := node.GetMemids()
-	memtypes := node.GetTypes()
-	memroles := node.GetRolesSid()
-	members := make([]model.Member, len(memids))
-	var memid int64
-	for i := range memids {
-		memid = memids[i] + memid
-		members[i] = model.Member{
-			ID:   model.ID(memid),
-			Type: decodeMemberType(memtypes[i]),
-			Role: c.strings[memroles[i]],
-		}
-	}
-	return members
-}
-
 func (c *blockContext) decodeTags(keyIDs, valIDs []uint32) map[string]string {
 	tags := make(map[string]string, len(keyIDs))
 	for i, keyID := range keyIDs {
@@ -208,20 +191,6 @@ func (tic *tagsContext) decodeTags() map[string]string {
 	}
 	tic.i = i + 1
 	return tags
-}
-
-// decodeMemberType converts protobuf enum Relation_MemberType to a ElementType.
-func decodeMemberType(mt protobuf.Relation_MemberType) model.ElementType {
-	switch mt {
-	case protobuf.Relation_NODE:
-		return model.NODE
-	case protobuf.Relation_WAY:
-		return model.WAY
-	case protobuf.Relation_RELATION:
-		return model.RELATION
-	default:
-		panic("unrecognized member type")
-	}
 }
 
 // toTimestamp converts a timestamp with a specific granularity, in units of

@@ -59,5 +59,5 @@ func main() {
 	}
 
 	// finish
-	fmt.Printf("\nTotal Time Taken: %v\n", time.Now().Sub(ts))
+	fmt.Printf("\nTotal Time Taken: %v\n", time.Since(ts))
 }
