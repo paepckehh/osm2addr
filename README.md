@@ -13,7 +13,7 @@
 ## Parse, extract and uniform OSM OpenStreetMap Open Source Data into json (postal) address validation DB mapping tables (MongoDB,..)
 ### HOW TO USE
 Generate German (DE) Json mapping tables
-requirements: curl golang 1.23+ 
+requirements: curl/wget and golang 1.23+ 
 
 ```Shell 
 curl -O https://download.geofabrik.de/europe/germany-latest.osm.pbf
