@@ -50,7 +50,6 @@ func hu(in int) string {
 		}
 		return h
 	}
-	return h
 }
 
 // makeCapitalLetter ....
