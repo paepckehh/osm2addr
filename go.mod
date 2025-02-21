@@ -4,8 +4,7 @@ go 1.23.5
 
 require (
 	github.com/destel/rill v0.7.0
-	github.com/dustin/go-humanize v1.0.1
-	github.com/golang/geo v0.0.0-20230421003525-6adc56603217
-	github.com/klauspost/compress v1.17.11
+	github.com/klauspost/compress v1.18.0
+	golang.org/x/text v0.22.0
 	google.golang.org/protobuf v1.36.5
 )

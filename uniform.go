@@ -1,21 +1,40 @@
 package osm2addr
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 )
 
-// uniform tag
-func (t *OSMTag) uniform() {
+// uniform a tagSet
+func (t *tagSET) uniform() error {
 	switch t.country {
 	case "DE":
+		if !isLatin1(t.city) {
+			return fmt.Errorf("[FAIL][City][Latin1][%v]%v", t.country, t.city)
+		}
+		if !isLatin1(t.street) {
+			return fmt.Errorf("[FAIL][Street][Latin1][%v]%v", t.country, t.street)
+		}
 		if strings.Contains(t.city, ".") {
 			t.city = tryNormCityDE(t.city)
 		}
 		t.city = camelCaseCityDE(t.city)
-		if len(t.postcode) == 4 {
-			t.postcode = "0" + t.postcode
+		p, err := strconv.Atoi(t.postcode)
+		if err != nil {
+			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.country, t.postcode)
+		}
+		pc := strconv.Itoa(p)
+		switch len(pc) {
+		case 5:
+			t.postcode = pc
+		case 4:
+			t.postcode = "0" + pc
+		default:
+			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.country, t.postcode)
 		}
 	}
+	return nil
 }
 
 // camelCaseCityDE...

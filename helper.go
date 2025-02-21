@@ -8,11 +8,26 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/dustin/go-humanize"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
-// validDE CharacterMap
-var validDE = [21]string{"Ä", "Ö", "Ü", "ä", "ö", "ü", "ß", "é", "è", "á", "ó", "ë", "ê", "š", "ł", "ć", "ú", "Ž", "Š"}
+// isLatin1 ...
+func isLatin1(s string) bool {
+	if isASCII(s) {
+		return true
+	}
+	var c = map[rune]rune{}
+	for _, runeValue := range s {
+		c[runeValue] = runeValue
+	}
+	for _, r := range c {
+		if r > unicode.MaxLatin1 {
+			return false
+		}
+	}
+	return true
+}
 
 // isASCII ...
 func isASCII(s string) bool {
@@ -26,7 +41,8 @@ func isASCII(s string) bool {
 
 // hu print large number readable for humans and fixed lenght
 func hu(in int) string {
-	h := humanize.Comma(int64(in))
+	p := message.NewPrinter(language.German)
+	h := p.Sprintf("%d", in)
 	for {
 		if len(h) < 10 {
 			h = " " + h
@@ -34,7 +50,7 @@ func hu(in int) string {
 		}
 		return h
 	}
-
+	return h
 }
 
 // makeCapitalLetter ....
@@ -80,7 +96,7 @@ func camelCaseSep(in, sep string) string {
 func writeJsonFile(countrycode, filename string, inMap map[string]map[string]bool) {
 	folder := filepath.Join("json", countrycode)
 	_ = os.MkdirAll(folder, 0755)
-	j, err := json.Marshal(inMap)
+	j, err := json.MarshalIndent(&inMap, "", "\t")
 	if err != nil {
 		panic(err)
 	}

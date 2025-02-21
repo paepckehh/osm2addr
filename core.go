@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -20,14 +19,15 @@ type Target struct {
 	FileName string
 }
 
-// OSMTag is a collection of osm tags:add<r
-type OSMTag struct {
+// tagSET is a collection of osm tags:add<r
+type tagSET struct {
 	country  string
 	city     string
 	street   string
 	postcode string
 }
 
+// Parse a Target
 func Parse(target *Target) error {
 
 	// init
@@ -50,7 +50,7 @@ func Parse(target *Target) error {
 	for i := 0; i < target.Worker; i++ {
 		wg.Add(1)
 		go func() {
-			w, tags, addrComplete, addrCompleteCC, nodes, objects := i, 0, 0, 0, 0, 0
+			w, tags, addrComplete, addrCompleteCC, nodes, objects, uniformErr := i, 0, 0, 0, 0, 0, 0
 			cc, country, countryErr := make(map[string]bool), 0, 0
 			c, city, cityErr := make(map[string]bool), 0, 0
 			s, street, streetErr := make(map[string]bool), 0, 0
@@ -64,7 +64,7 @@ func Parse(target *Target) error {
 					fmt.Printf("\naddr:target:city:uniq    %v  addr:all:city:valid    %v  addr:city:err    %v", hu(len(c)), hu(city), hu(cityErr))
 					fmt.Printf("\naddr:target:street:uniq  %v  addr:all:street:valid  %v  addr:street:err  %v", hu(len(s)), hu(street), hu(streetErr))
 					fmt.Printf("\naddr:target:postcode:uniq%v  addr:all:postcode:valid%v  addr:postcode:err%v", hu(len(p)), hu(postcode), hu(postcodeErr))
-					fmt.Printf("\naddr:target:records      %v  addr:all:recodrs       %v", hu(addrCompleteCC), hu(addrComplete))
+					fmt.Printf("\naddr:target:records      %v  addr:all:records       %v  addr:uniform:err %v", hu(addrCompleteCC), hu(addrComplete), hu(uniformErr))
 					fmt.Printf("\n\nWorker#%v Processed => Objects:%v => Nodes:%v => AddrTags:%v => ExitCode:%v\n", w, hu(objects), hu(nodes), hu(tags), err.Error())
 					if err.Error() != "EOF" {
 						globalErrCode = err
@@ -77,7 +77,7 @@ func Parse(target *Target) error {
 					case *model.Node:
 						nodes++
 						if len(o.Tags) > 0 {
-							t := OSMTag{} // new tag set
+							t := tagSET{} // new tag set
 							for tag, content := range o.Tags {
 								tags++
 								if len(tag) > 8 && tag[:5] == "addr:" {
@@ -98,7 +98,7 @@ func Parse(target *Target) error {
 										case "street":
 											street++
 											l := len(content)
-											if l > 3 && l > 256 {
+											if l < 3 || l > 256 {
 												streetErr++
 												continue
 											}
@@ -106,43 +106,37 @@ func Parse(target *Target) error {
 										case "city":
 											city++
 											l := len(content)
-											if l > 3 && l > 256 {
+											if l < 3 || l > 256 {
 												cityErr++
 												continue
 											}
 											t.city = content
 										case "postcode":
 											postcode++
-											pInt, err := strconv.Atoi(content)
-											if err != nil {
+											l := len(content)
+											if l < 3 || l > 256 {
 												postcodeErr++
 												continue
 											}
-											pStr := strconv.Itoa(pInt)
-											l := len(pStr)
-											switch l {
-											case 5:
-											case 4:
-											default:
-												postcodeErr++
-												continue
-											}
-											t.postcode = pStr
+											t.postcode = content
 										}
 
 									}
 								}
 							}
-							// validate tag set
+							// validate tag complete, validate
 							if t.country != "" {
 								if !cc[t.country] {
-									cc[t.country] = true
+									cc[t.country] = true // new country code found
 								}
 								if t.postcode != "" && t.street != "" && t.city != "" {
 									addrComplete++
 									if t.country == target.Country {
 										addrCompleteCC++
-										t.uniform()
+										if err := t.uniform(); err != nil {
+											uniformErr++
+											continue
+										}
 										if !p[t.postcode] {
 											p[t.postcode] = true
 										}

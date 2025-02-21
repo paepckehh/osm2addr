@@ -17,7 +17,7 @@ requirements: curl golang 1.23+
 ```Shell 
 curl -O https://download.geofabrik.de/europe/germany-latest.osm.pbf
 go run paepcke.de/osm2addr/cmd/osm2addr@latest DE germany-latest.osm.pbf
-ls -la json/DE
+ls -la DE
 ```
 ### FEATURES
-- fast: extracts, analyzes and normalizes around 500.000.000 OSM Nodes / minute on mid-range consumer hardware
+- fast: extracts, analyzes and normalizes around 500.000.000 OSM Nodes in under 30 seconds on mid-range consumer laptop

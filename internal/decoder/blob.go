@@ -33,8 +33,6 @@ import (
 	"paepcke.de/osm2addr/internal/protobuf"
 )
 
-const coordinatesPerDegree = 1e-9
-
 type blob struct {
 	header *protobuf.BlobHeader
 	blob   *protobuf.Blob
@@ -199,24 +197,10 @@ func parseOSMHeader(buffer []byte) (*model.Header, error) {
 		OsmosisReplicationBaseURL:        hb.GetOsmosisReplicationBaseUrl(),
 		OsmosisReplicationSequenceNumber: hb.GetOsmosisReplicationSequenceNumber(),
 	}
-	if hb.Bbox != nil {
-		header.BoundingBox = model.BoundingBox{
-			Left:   toDegrees(0, 1, hb.Bbox.GetLeft()),
-			Right:  toDegrees(0, 1, hb.Bbox.GetRight()),
-			Top:    toDegrees(0, 1, hb.Bbox.GetTop()),
-			Bottom: toDegrees(0, 1, hb.Bbox.GetBottom()),
-		}
-	}
 
 	if hb.OsmosisReplicationTimestamp != nil {
 		header.OsmosisReplicationTimestamp = time.Unix(*hb.OsmosisReplicationTimestamp, 0)
 	}
 
 	return header, nil
-}
-
-// toDegrees converts a coordinate into Degrees, given the offset and
-// granularity of the coordinate.
-func toDegrees(offset int64, granularity int32, coordinate int64) model.Degrees {
-	return coordinatesPerDegree * model.Degrees(offset+(int64(granularity)*coordinate))
 }

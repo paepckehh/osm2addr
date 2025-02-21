@@ -33,8 +33,6 @@ func parsePrimitiveBlock(buffer []byte) ([]model.Object, error) {
 	for _, pg := range pb.GetPrimitivegroup() {
 		elements = append(elements, c.decodeNodes(pg.GetNodes())...)
 		elements = append(elements, c.decodeDenseNodes(pg.GetDense())...)
-		elements = append(elements, c.decodeWays(pg.GetWays())...)
-		elements = append(elements, c.decodeRelations(pg.GetRelations())...)
 	}
 	return elements, nil
 }
@@ -46,8 +44,6 @@ func (c *blockContext) decodeNodes(nodes []*protobuf.Node) (elements []model.Obj
 			ID:   model.ID(node.GetId()),
 			Tags: c.decodeTags(node.GetKeys(), node.GetVals()),
 			Info: c.decodeInfo(node.GetInfo()),
-			Lat:  toDegrees(c.latOffset, c.granularity, node.GetLat()),
-			Lon:  toDegrees(c.lonOffset, c.granularity, node.GetLon()),
 		}
 	}
 	return elements
@@ -58,52 +54,13 @@ func (c *blockContext) decodeDenseNodes(nodes *protobuf.DenseNodes) []model.Obje
 	elements := make([]model.Object, len(ids))
 	tic := c.newTagsContext(nodes.GetKeysVals())
 	dic := c.newDenseInfoContext(nodes.GetDenseinfo())
-	lats := nodes.GetLat()
-	lons := nodes.GetLon()
-	var id, lat, lon int64
+	var id int64
 	for i := range ids {
 		id = ids[i] + id
-		lat = lats[i] + lat
-		lon = lons[i] + lon
 		elements[i] = &model.Node{
 			ID:   model.ID(id),
 			Tags: tic.decodeTags(),
 			Info: dic.decodeInfo(i),
-			Lat:  toDegrees(c.latOffset, c.granularity, lat),
-			Lon:  toDegrees(c.lonOffset, c.granularity, lon),
-		}
-	}
-	return elements
-}
-
-func (c *blockContext) decodeWays(nodes []*protobuf.Way) []model.Object {
-	elements := make([]model.Object, len(nodes))
-	for i, node := range nodes {
-		refs := node.GetRefs()
-		nodeIDs := make([]model.ID, len(refs))
-		var nodeID int64
-		for j, delta := range refs {
-			nodeID = delta + nodeID
-			nodeIDs[j] = model.ID(nodeID)
-		}
-		elements[i] = &model.Way{
-			ID:      model.ID(node.GetId()),
-			Tags:    c.decodeTags(node.GetKeys(), node.GetVals()),
-			NodeIDs: nodeIDs,
-			Info:    c.decodeInfo(node.GetInfo()),
-		}
-	}
-	return elements
-}
-
-func (c *blockContext) decodeRelations(nodes []*protobuf.Relation) []model.Object {
-	elements := make([]model.Object, len(nodes))
-	for i, node := range nodes {
-		elements[i] = &model.Relation{
-			ID:      model.ID(node.GetId()),
-			Tags:    c.decodeTags(node.GetKeys(), node.GetVals()),
-			Info:    c.decodeInfo(node.GetInfo()),
-			Members: c.decodeMembers(node),
 		}
 	}
 	return elements
@@ -154,8 +111,6 @@ func (c *blockContext) decodeInfo(info *protobuf.Info) *model.Info {
 type blockContext struct {
 	strings         []string
 	granularity     int32
-	latOffset       int64
-	lonOffset       int64
 	dateGranularity int32
 }
 
@@ -163,8 +118,6 @@ func newBlockContext(pb *protobuf.PrimitiveBlock) *blockContext {
 	return &blockContext{
 		strings:         pb.GetStringtable().GetS(),
 		granularity:     pb.GetGranularity(),
-		latOffset:       pb.GetLatOffset(),
-		lonOffset:       pb.GetLonOffset(),
 		dateGranularity: pb.GetDateGranularity(),
 	}
 }

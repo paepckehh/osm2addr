@@ -1,0 +1,37 @@
+{
+	"Born": {
+		"6661": true
+	},
+	"Dillingen": {
+		"6350": true
+	},
+	"Echternach": {
+		"6430": true,
+		"6440": true,
+		"6471": true
+	},
+	"Grevenmacher": {
+		"6753": true,
+		"6794": true
+	},
+	"Mertert": {
+		"6670": true,
+		"6684": true
+	},
+	"Moersdorf": {
+		"6690": true,
+		"6691": true
+	},
+	"Remich": {
+		"5533": true
+	},
+	"Schengen": {
+		"5445": true
+	},
+	"Stadtbredimus": {
+		"5450": true
+	},
+	"Wormeldange": {
+		"5480": true
+	}
+}
