@@ -188,10 +188,14 @@ func Parse(target *Target) error {
 				}
 			}
 			// write json mapping tables
-			writeJsonFile(target.Country, "postcode2city.json", postcode2city)
-			writeJsonFile(target.Country, "postcode2street.json", postcode2street)
-			writeJsonFile(target.Country, "city2postcode.json", city2postcode)
-			writeJsonFile(target.Country, "city2street.json", city2street)
+			writeJsonFileMap(target.Country, "city.json", c)
+			writeJsonFileMap(target.Country, "street.json", s)
+			writeJsonFileMap(target.Country, "postcode.json", p)
+			writeJsonFileMMap(target.Country, "postcode2city.json", postcode2city)
+			writeJsonFileMMap(target.Country, "postcode2city.json", postcode2city)
+			writeJsonFileMMap(target.Country, "postcode2street.json", postcode2street)
+			writeJsonFileMMap(target.Country, "city2postcode.json", city2postcode)
+			writeJsonFileMMap(target.Country, "city2street.json", city2street)
 			wg.Done()
 		}()
 	}

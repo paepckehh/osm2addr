@@ -16,10 +16,6 @@ func (t *tagSET) uniform() error {
 		if !isLatin1(t.street) {
 			return fmt.Errorf("[FAIL][Street][Latin1][%v]%v", t.country, t.street)
 		}
-		if strings.Contains(t.city, ".") {
-			t.city = tryNormCityDE(t.city)
-		}
-		t.city = camelCaseCityDE(t.city)
 		p, err := strconv.Atoi(t.postcode)
 		if err != nil {
 			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.country, t.postcode)
@@ -33,6 +29,11 @@ func (t *tagSET) uniform() error {
 		default:
 			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.country, t.postcode)
 		}
+		if strings.Contains(t.city, ".") {
+			t.city = tryNormCityDE(t.city)
+		}
+		t.city = camelCaseCityDE(t.city)
+		t.street = tryNormStreetDE(t.street)
 	}
 	return nil
 }
@@ -85,6 +86,15 @@ func camelCaseCityDE(in string) string {
 		}
 		out = out + " " + p
 	}
+	return out
+}
+
+// tryNormStreetDE ...
+func tryNormStreetDE(in string) string {
+	out := strings.ReplaceAll(in, "Str.", "Strasse")
+	out = strings.ReplaceAll(out, "Straße", "Strasse")
+	out = strings.ReplaceAll(out, "str.", "strasse")
+	out = strings.ReplaceAll(out, "straße", "strasse")
 	return out
 }
 

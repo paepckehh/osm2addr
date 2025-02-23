@@ -1,6 +1,8 @@
 package osm2addr
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -11,6 +13,22 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
+
+// db object identifier
+type objectID [12]byte
+
+// convert a string into a repoduceable objectID
+func id(in string) objectID {
+	var o objectID
+	h := sha256.Sum256([]byte(in))
+	copy(o[:], h[:12])
+	return o
+}
+
+// convert a objectID into a base64 string
+func (in *objectID) b64() string {
+	return base64.StdEncoding.EncodeToString(in[:])
+}
 
 // isLatin1 ...
 func isLatin1(s string) bool {
@@ -91,11 +109,41 @@ func camelCaseSep(in, sep string) string {
 	return in
 }
 
-// writeJsonFile ...
-func writeJsonFile(countrycode, filename string, inMap map[string]map[string]bool) {
+// writeJsonFileIDMap ...
+func writeJsonFileIDMap(countrycode, filename string, in map[string]objectID) {
 	folder := filepath.Join("json", countrycode)
 	_ = os.MkdirAll(folder, 0755)
-	j, err := json.MarshalIndent(&inMap, "", "\t")
+	out := make(map[string]string, len(in))
+	for key, value := range in {
+		out[key] = value.b64()
+	}
+	j, err := json.MarshalIndent(&out, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(filepath.Join(folder, filename), j, 0644); err != nil {
+		panic(err)
+	}
+}
+
+// writeJsonFileMap ...
+func writeJsonFileMap(countrycode, filename string, in map[string]bool) {
+	folder := filepath.Join("json", countrycode)
+	_ = os.MkdirAll(folder, 0755)
+	j, err := json.MarshalIndent(&in, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(filepath.Join(folder, filename), j, 0644); err != nil {
+		panic(err)
+	}
+}
+
+// writeJsonFileMMap ...
+func writeJsonFileMMap(countrycode, filename string, in map[string]map[string]bool) {
+	folder := filepath.Join("json", countrycode)
+	_ = os.MkdirAll(folder, 0755)
+	j, err := json.MarshalIndent(&in, "", "\t")
 	if err != nil {
 		panic(err)
 	}
