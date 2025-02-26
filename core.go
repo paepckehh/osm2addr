@@ -19,12 +19,15 @@ type Target struct {
 	FileName string
 }
 
-// tagSET is a collection of osm tags:add<r
+// db object identifier
+type objectID [12]byte
+
+// tagSET ...
 type tagSET struct {
-	country  string
-	city     string
-	street   string
-	postcode string
+	country  string `json:"county"`
+	city     string `json:"city"`
+	street   string `json:"street"`
+	postcode string `json:"postcode"`
 }
 
 // Parse a Target
@@ -50,7 +53,8 @@ func Parse(target *Target) error {
 	for i := 0; i < target.Worker; i++ {
 		wg.Add(1)
 		go func() {
-			w, tags, addrComplete, addrCompleteCC, nodes, objects, uniformErr := i, 0, 0, 0, 0, 0, 0
+			sets := make(map[string]tagSET)
+			w, tags, addrComplete, nodes, objects, uniformErr := i, 0, 0, 0, 0, 0
 			cc, country, countryErr := make(map[string]bool), 0, 0
 			c, city, cityErr := make(map[string]bool), 0, 0
 			s, street, streetErr := make(map[string]bool), 0, 0
@@ -64,7 +68,7 @@ func Parse(target *Target) error {
 					fmt.Printf("\naddr:target:city:uniq    %v  addr:all:city:valid    %v  addr:city:err    %v", hu(len(c)), hu(city), hu(cityErr))
 					fmt.Printf("\naddr:target:street:uniq  %v  addr:all:street:valid  %v  addr:street:err  %v", hu(len(s)), hu(street), hu(streetErr))
 					fmt.Printf("\naddr:target:postcode:uniq%v  addr:all:postcode:valid%v  addr:postcode:err%v", hu(len(p)), hu(postcode), hu(postcodeErr))
-					fmt.Printf("\naddr:target:records      %v  addr:all:records       %v  addr:uniform:err %v", hu(addrCompleteCC), hu(addrComplete), hu(uniformErr))
+					fmt.Printf("\naddr:target:records      %v  addr:all:records       %v  addr:uniform:err %v", hu(len(sets)), hu(addrComplete), hu(uniformErr))
 					fmt.Printf("\n\nWorker#%v Processed => Objects:%v => Nodes:%v => AddrTags:%v => ExitCode:%v\n", w, hu(objects), hu(nodes), hu(tags), err.Error())
 					if err.Error() != "EOF" {
 						globalErrCode = err
@@ -129,14 +133,19 @@ func Parse(target *Target) error {
 								if !cc[t.country] {
 									cc[t.country] = true // new country code found
 								}
-								if t.postcode != "" && t.street != "" && t.city != "" {
+								if t.postcode != "" && t.city != "" && t.street != "" {
 									addrComplete++
 									if t.country == target.Country {
-										addrCompleteCC++
 										if err := t.uniform(); err != nil {
 											uniformErr++
 											continue
 										}
+										tid := id(t.country + t.postcode + t.city + t.street)
+										tidb64 := tid.b64()
+										if _, ok := sets[tidb64]; ok {
+											continue
+										}
+										sets[tidb64] = t
 										if !p[t.postcode] {
 											p[t.postcode] = true
 										}
@@ -188,6 +197,7 @@ func Parse(target *Target) error {
 				}
 			}
 			// write json mapping tables
+			writeJsonFile(target.Country, "id.json", sets)
 			writeJsonFileMap(target.Country, "city.json", c)
 			writeJsonFileMap(target.Country, "street.json", s)
 			writeJsonFileMap(target.Country, "postcode.json", p)

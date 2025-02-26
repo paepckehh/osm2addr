@@ -14,13 +14,12 @@ import (
 	"golang.org/x/text/message"
 )
 
-// db object identifier
-type objectID [12]byte
+const _secretMAC = "Nachts99Sind44Alle66Grau99Blau"
 
 // convert a string into a repoduceable objectID
 func id(in string) objectID {
 	var o objectID
-	h := sha256.Sum256([]byte(in))
+	h := sha256.Sum256([]byte(in + _secretMAC))
 	copy(o[:], h[:12])
 	return o
 }
@@ -107,6 +106,19 @@ func camelCaseSep(in, sep string) string {
 		return out
 	}
 	return in
+}
+
+// writeJsonFile ...
+func writeJsonFile(countrycode, filename string, in map[string]tagSET) {
+	folder := filepath.Join("json", countrycode)
+	_ = os.MkdirAll(folder, 0755)
+	j, err := json.MarshalIndent(&in, "", "\t")
+	if err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(filepath.Join(folder, filename), j, 0644); err != nil {
+		panic(err)
+	}
 }
 
 // writeJsonFileIDMap ...
