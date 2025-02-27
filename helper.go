@@ -17,15 +17,15 @@ import (
 const _secretMAC = "Nachts99Sind44Alle66Grau99Blau"
 
 // convert a string into a repoduceable objectID
-func id(in string) objectID {
-	var o objectID
+func id(in string) ObjectID {
+	var o ObjectID
 	h := sha256.Sum256([]byte(in + _secretMAC))
 	copy(o[:], h[:12])
 	return o
 }
 
 // convert a objectID into a base64 string
-func (in *objectID) b64() string {
+func (in *ObjectID) b64() string {
 	return base64.StdEncoding.EncodeToString(in[:])
 }
 
@@ -109,7 +109,7 @@ func camelCaseSep(in, sep string) string {
 }
 
 // writeJsonFile ...
-func writeJsonFile(countrycode, filename string, in map[string]tagSET) {
+func writeJsonFile(countrycode, filename string, in map[string]TagSET) {
 	folder := filepath.Join("json", countrycode)
 	_ = os.MkdirAll(folder, 0755)
 	j, err := json.MarshalIndent(&in, "", "\t")
@@ -122,21 +122,21 @@ func writeJsonFile(countrycode, filename string, in map[string]tagSET) {
 }
 
 // writeJsonFileIDMap ...
-func writeJsonFileIDMap(countrycode, filename string, in map[string]objectID) {
-	folder := filepath.Join("json", countrycode)
-	_ = os.MkdirAll(folder, 0755)
-	out := make(map[string]string, len(in))
-	for key, value := range in {
-		out[key] = value.b64()
-	}
-	j, err := json.MarshalIndent(&out, "", "\t")
-	if err != nil {
-		panic(err)
-	}
-	if err := os.WriteFile(filepath.Join(folder, filename), j, 0644); err != nil {
-		panic(err)
-	}
-}
+//func writeJsonFileIDMap(countrycode, filename string, in map[string]objectID) {
+//	folder := filepath.Join("json", countrycode)
+//	_ = os.MkdirAll(folder, 0755)
+//	out := make(map[string]string, len(in))
+//	for key, value := range in {
+//		out[key] = value.b64()
+//	}
+//	j, err := json.MarshalIndent(&out, "", "\t")
+//	if err != nil {
+//		panic(err)
+//	}
+//	if err := os.WriteFile(filepath.Join(folder, filename), j, 0644); err != nil {
+//		panic(err)
+//	}
+//}
 
 // writeJsonFileMap ...
 func writeJsonFileMap(countrycode, filename string, in map[string]bool) {

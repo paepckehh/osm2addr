@@ -7,33 +7,33 @@ import (
 )
 
 // uniform a tagSet
-func (t *tagSET) uniform() error {
-	switch t.country {
+func (t *TagSET) uniform() error {
+	switch t.Country {
 	case "DE":
-		if !isLatin1(t.city) {
-			return fmt.Errorf("[FAIL][City][Latin1][%v]%v", t.country, t.city)
+		if !isLatin1(t.City) {
+			return fmt.Errorf("[FAIL][City][Latin1][%v]%v", t.Country, t.City)
 		}
-		if !isLatin1(t.street) {
-			return fmt.Errorf("[FAIL][Street][Latin1][%v]%v", t.country, t.street)
+		if !isLatin1(t.Street) {
+			return fmt.Errorf("[FAIL][Street][Latin1][%v]%v", t.Country, t.Street)
 		}
-		p, err := strconv.Atoi(t.postcode)
+		p, err := strconv.Atoi(t.Postcode)
 		if err != nil {
-			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.country, t.postcode)
+			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.Country, t.Postcode)
 		}
 		pc := strconv.Itoa(p)
 		switch len(pc) {
 		case 5:
-			t.postcode = pc
+			t.Postcode = pc
 		case 4:
-			t.postcode = "0" + pc
+			t.Postcode = "0" + pc
 		default:
-			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.country, t.postcode)
+			return fmt.Errorf("[FAIL][Postcode][%v]%v", t.Country, t.Postcode)
 		}
-		if strings.Contains(t.city, ".") {
-			t.city = tryNormCityDE(t.city)
+		if strings.Contains(t.City, ".") {
+			t.City = tryNormCityDE(t.City)
 		}
-		t.city = camelCaseCityDE(t.city)
-		t.street = tryNormStreetDE(t.street)
+		t.City = camelCaseCityDE(t.City)
+		t.Street = tryNormStreetDE(t.Street)
 	}
 	return nil
 }
@@ -118,6 +118,5 @@ func tryNormCityDE(in string) string {
 	out = strings.ReplaceAll(out, " a.", " am ")
 	out = strings.ReplaceAll(out, " b. ", " bei ")
 	out = strings.ReplaceAll(out, " b.", " bei ")
-	// if out != in { fmt.Printf("\n[CITY-DE-FORMED]%v=>%v", in, out) }
 	return out
 }

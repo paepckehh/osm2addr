@@ -12,3 +12,4 @@ examples:
 check: 
 	gofmt -w -s .
 	staticcheck
+	golangci-lint run

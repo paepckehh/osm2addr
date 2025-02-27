@@ -20,14 +20,14 @@ type Target struct {
 }
 
 // db object identifier
-type objectID [12]byte
+type ObjectID [12]byte
 
-// tagSET ...
-type tagSET struct {
-	country  string `json:"county"`
-	city     string `json:"city"`
-	street   string `json:"street"`
-	postcode string `json:"postcode"`
+// TagSET ...
+type TagSET struct {
+	Country  string `json:"-"`
+	City     string `json:"city"`
+	Street   string `json:"street"`
+	Postcode string `json:"postcode"`
 }
 
 // Parse a Target
@@ -53,7 +53,7 @@ func Parse(target *Target) error {
 	for i := 0; i < target.Worker; i++ {
 		wg.Add(1)
 		go func() {
-			sets := make(map[string]tagSET)
+			sets := make(map[string]TagSET)
 			w, tags, addrComplete, nodes, objects, uniformErr := i, 0, 0, 0, 0, 0
 			cc, country, countryErr := make(map[string]bool), 0, 0
 			c, city, cityErr := make(map[string]bool), 0, 0
@@ -81,7 +81,7 @@ func Parse(target *Target) error {
 					case *model.Node:
 						nodes++
 						if len(o.Tags) > 0 {
-							t := tagSET{} // new tag set
+							t := TagSET{} // init new tag set
 							for tag, content := range o.Tags {
 								tags++
 								if len(tag) > 8 && tag[:5] == "addr:" {
@@ -98,7 +98,7 @@ func Parse(target *Target) error {
 												countryErr++
 												continue
 											}
-											t.country = content
+											t.Country = content
 										case "street":
 											street++
 											l := len(content)
@@ -106,7 +106,7 @@ func Parse(target *Target) error {
 												streetErr++
 												continue
 											}
-											t.street = content
+											t.Street = content
 										case "city":
 											city++
 											l := len(content)
@@ -114,7 +114,7 @@ func Parse(target *Target) error {
 												cityErr++
 												continue
 											}
-											t.city = content
+											t.City = content
 										case "postcode":
 											postcode++
 											l := len(content)
@@ -122,68 +122,68 @@ func Parse(target *Target) error {
 												postcodeErr++
 												continue
 											}
-											t.postcode = content
+											t.Postcode = content
 										}
 
 									}
 								}
 							}
 							// validate tag complete, validate
-							if t.country != "" {
-								if !cc[t.country] {
-									cc[t.country] = true // new country code found
+							if t.Country != "" {
+								if !cc[t.Country] {
+									cc[t.Country] = true // new country code found
 								}
-								if t.postcode != "" && t.city != "" && t.street != "" {
+								if t.Postcode != "" && t.City != "" && t.Street != "" {
 									addrComplete++
-									if t.country == target.Country {
+									if t.Country == target.Country {
 										if err := t.uniform(); err != nil {
 											uniformErr++
 											continue
 										}
-										tid := id(t.country + t.postcode + t.city + t.street)
+										tid := id(t.Country + t.Postcode + t.City + t.Street)
 										tidb64 := tid.b64()
 										if _, ok := sets[tidb64]; ok {
 											continue
 										}
 										sets[tidb64] = t
-										if !p[t.postcode] {
-											p[t.postcode] = true
+										if !p[t.Postcode] {
+											p[t.Postcode] = true
 										}
-										if !c[t.city] {
-											c[t.city] = true
+										if !c[t.City] {
+											c[t.City] = true
 										}
-										if !s[t.street] {
-											s[t.street] = true
+										if !s[t.Street] {
+											s[t.Street] = true
 										}
 										// scope CC:postcode
 										// scope CC:postcode:city
-										if _, ok := postcode2city[t.postcode]; !ok {
-											postcode2city[t.postcode] = make(map[string]bool)
+										if _, ok := postcode2city[t.Postcode]; !ok {
+											postcode2city[t.Postcode] = make(map[string]bool)
 										}
-										if !postcode2city[t.postcode][t.city] {
-											postcode2city[t.postcode][t.city] = true
+										if !postcode2city[t.Postcode][t.City] {
+											postcode2city[t.Postcode][t.City] = true
 										}
 										// scope CC:postcode:street
-										if _, ok := postcode2street[t.postcode]; !ok {
-											postcode2street[t.postcode] = make(map[string]bool)
+										if _, ok := postcode2street[t.Postcode]; !ok {
+											postcode2street[t.Postcode] = make(map[string]bool)
 										}
-										if !postcode2street[t.postcode][t.street] {
-											postcode2street[t.postcode][t.street] = true
+										if !postcode2street[t.Postcode][t.Street] {
+											postcode2street[t.Postcode][t.Street] = true
 										}
 										// scope CC:city
 										// scope CC:city:postcode
-										if _, ok := city2postcode[t.city]; !ok {
-											city2postcode[t.city] = make(map[string]bool)
+										if _, ok := city2postcode[t.City]; !ok {
+											city2postcode[t.City] = make(map[string]bool)
 										}
-										if !city2postcode[t.city][t.postcode] {
-											city2postcode[t.city][t.postcode] = true
+										if !city2postcode[t.City][t.Postcode] {
+											city2postcode[t.City][t.Postcode] = true
 										}
 										// scope CC:city:street
-										if _, ok := city2street[t.city]; !ok {
-											city2street[t.city] = make(map[string]bool)
+										if _, ok := city2street[t.City]; !ok {
+											city2street[t.City] = make(map[string]bool)
 										}
-										if !city2street[t.city][t.street] {
-											city2street[t.city][t.street] = true
+										if !city2street[t.City][t.Street] {
+											city2street[t.City][t.Street] = true
 										}
 									}
 								}

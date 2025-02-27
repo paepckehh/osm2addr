@@ -17,6 +17,7 @@ deps:
 check: 
 	gofmt -w -s .
 	staticcheck
+	golangci-lint run
 	make -C cmd/$(PROJECT) check
 
 ##########################
