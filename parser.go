@@ -20,9 +20,9 @@ func pbfparser(target *Target) {
 	defer d.Close()
 
 	// print osm file stats
-	fmt.Printf("\nOSM:PBF:File:URL      # %v", d.Header.OsmosisReplicationBaseURL)
-	fmt.Printf("\nOSM:PBF:File:Repl:USM # %v", d.Header.OsmosisReplicationSequenceNumber)
-	fmt.Printf("\nOSM:PBF:File:Repl:TS  # %v", d.Header.OsmosisReplicationTimestamp)
+	fmt.Printf("\nOSM:PBF:File:URL      #  %v", d.Header.OsmosisReplicationBaseURL)
+	fmt.Printf("\nOSM:PBF:File:Repl:USM #  %v", d.Header.OsmosisReplicationSequenceNumber)
+	fmt.Printf("\nOSM:PBF:File:Repl:TS  #  %v", d.Header.OsmosisReplicationTimestamp)
 
 	// init parser stats
 	countries := make(map[string]bool)
