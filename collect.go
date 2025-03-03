@@ -1,6 +1,10 @@
 package osm2addr
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/agnivade/levenshtein"
+)
 
 // collect ...
 func collect(targetCountry string) {
@@ -18,22 +22,24 @@ func collect(targetCountry string) {
 		if _, ok := sets[tidb64]; ok {
 			continue
 		}
-		sets[tidb64] = t
-		if !p[t.Postcode] {
-			p[t.Postcode] = true
-		}
-		if !c[t.City] {
-			c[t.City] = true
-		}
-		if !s[t.Street] {
-			s[t.Street] = true
-		}
 		// scope CC:postcode
 		// scope CC:postcode:city
 		if _, ok := postcode2city[t.Postcode]; !ok {
 			postcode2city[t.Postcode] = make(map[string]bool)
 		}
 		if !postcode2city[t.Postcode][t.City] {
+			for key, _ := range postcode2city[t.Postcode] {
+				distance := levenshtein.ComputeDistance(key, t.City)
+				if distance < 2 {
+					fmt.Printf("\n[INFO] Levenshtein:%v # Postcode:%v # City:%v <===> City:%v", distance, t.Postcode, key, t.City)
+					t.City = key
+					tid := id(t.Country + t.Postcode + t.City + t.Street)
+					tidb64 := tid.hex()
+					if _, ok := sets[tidb64]; ok {
+						continue
+					}
+				}
+			}
 			postcode2city[t.Postcode][t.City] = true
 		}
 		// scope CC:postcode:street
@@ -58,6 +64,16 @@ func collect(targetCountry string) {
 		if !city2street[t.City][t.Street] {
 			city2street[t.City][t.Street] = true
 		}
+		if !p[t.Postcode] {
+			p[t.Postcode] = true
+		}
+		if !c[t.City] {
+			c[t.City] = true
+		}
+		if !s[t.Street] {
+			s[t.Street] = true
+		}
+		sets[tidb64] = t
 	}
 	// write json mapping tables
 	writeJsonFile(targetCountry, "id.json", sets)

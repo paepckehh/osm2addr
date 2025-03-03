@@ -20,9 +20,9 @@ func pbfparser(target *Target) {
 	defer d.Close()
 
 	// print osm file stats
-	fmt.Printf("\nOSM:PBF:File:URL      # %v", d.Header.OsmosisReplicationBaseURL)
-	fmt.Printf("\nOSM:PBF:File:Repl:USM # %v", d.Header.OsmosisReplicationSequenceNumber)
-	fmt.Printf("\nOSM:PBF:File:Repl:TS  # %v", d.Header.OsmosisReplicationTimestamp)
+	fmt.Printf("\nOSM:PBF:File:URL      #  %v", d.Header.OsmosisReplicationBaseURL)
+	fmt.Printf("\nOSM:PBF:File:Repl:USM #  %v", d.Header.OsmosisReplicationSequenceNumber)
+	fmt.Printf("\nOSM:PBF:File:Repl:TS  #  %v", d.Header.OsmosisReplicationTimestamp)
 
 	// init parser stats
 	countries := make(map[string]bool)
@@ -34,6 +34,7 @@ func pbfparser(target *Target) {
 			if err.Error() != "EOF" {
 				panic(err)
 			}
+			fmt.Printf("\nOSM:PBF:ObjectsParsed # %v", hu(objects))
 			fmt.Printf("\nOSM:PBF:AddrTags      # %v", hu(addrComplete))
 			fmt.Printf("\nOSM:PBF:Uniq:Country  # %v", hu(len(countries)))
 			fmt.Printf("\nOSM:PBF:Err:Uniform   # %v", hu(uniformErr))
@@ -105,11 +106,8 @@ func pbfparser(target *Target) {
 						if t.Postcode != "" && t.City != "" && t.Street != "" {
 							addrComplete++
 							if t.Country == target.Country {
-								if err := t.uniform(); err != nil {
-									uniformErr++
-								} else {
-									targets <- &t
-								}
+								uniformErr = uniformErr + t.uniform()
+								targets <- &t
 							}
 						}
 					}

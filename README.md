@@ -22,29 +22,33 @@ ls -la DE
 ```
 
 ### EXAMPLE RUN (EXAMPLE DATA OUTPUT see example-json-output folder)
-```Shell 
-# make
-make -C cmd/osm2addr all
-make[1]: Entering directory '/home/me/projects/osm2addr/cmd/osm2addr'
-GOARCH=amd64 GOAMD64=v3 go run -mod=readonly main.go DE ../../data/germany-latest.osm.pbf
+```Shell
+go run main.go DE ../../data/germany-latest.osm.pbf
 
-OSM:Startup       # 2025-02-21 09:33:13.140059015 +0000 UTC m=+0.000427720
-OSM:TargetCountry # DE
-OSM:Worker        # 1
-OSM:File          # ../../data/germany-latest.osm.pbf
-OSM:File:URL      # https://download.geofabrik.de/europe/germany-updates
-OSM:File:Repl:USM # 4330
-OSM:File:Repl:TS  # 2025-02-13 21:21:14 +0000 UTC
-
-addr:country:uniq                10  addr:all:country:valid  2.792.983  addr:country:err          0
-addr:target:city:uniq         8.045  addr:all:city:valid     3.659.945  addr:city:err            17
-addr:target:street:uniq     120.550  addr:all:street:valid   3.905.365  addr:street:err         162
-addr:target:postcode:uniq     7.541  addr:all:postcode:valid 3.513.835  addr:postcode:err         0
-addr:target:records       2.699.702  addr:all:records        2.711.889  addr:uniform:err         53
-
-Worker#0 Processed => Objects:411.113.874 => Nodes:411.113.874 => AddrTags:71.720.811 => ExitCode:EOF
-
-Total Time Taken: 33.282589674s
+OSM:Startup           #  2025-03-03 09:03:09.632247303 +0000 UTC m=+0.000512489
+OSM:TargetCountry     #  DE
+OSM:WorkerScale       #  1
+OSM:File              #  ../../data/germany-latest.osm.pbf
+OSM:PBF:File:URL      #  https://download.geofabrik.de/europe/germany-updates
+OSM:PBF:File:Repl:USM #  4330
+OSM:PBF:File:Repl:TS  #  2025-02-13 21:21:14 +0000 UTC
+[INFO] Levenshtein:1 # Postcode:17398 # City:Bugewitz <===> City:Bugewtz
+[INFO] Levenshtein:1 # Postcode:04779 # City:Wermsdorf <===> City:Wermsorf
+[INFO] Levenshtein:1 # Postcode:94051 # City:Hauzenberg <===> City:Haunzenberg
+[INFO] Levenshtein:1 # Postcode:22395 # City:Hamburg <===> City:Hanburg
+OSM:PBF:ObjectsParsed # 411.113.874
+OSM:PBF:AddrTags      #   2.711.889
+OSM:PBF:Uniq:Country  #          10
+OSM:PBF:Err:Uniform   #      21.858
+OSM:PBF:Err:Country   #           0
+OSM:PBF:Err:Postcode  #           0
+OSM:PBF:Err:City      #          17
+OSM:PBF:Err:Street    #         162
+OSM:Uniq:City         #       8.036
+OSM:Uniq:Street       #     120.548
+OSM:Uniq:Postcode     #       7.541
+OSM:Collect:Sets      #     265.636
+OSM:TotalTime:        #  50.25799055s
 ```
 
 ### FEATURES
