@@ -104,3 +104,11 @@ func camelCaseSep(in, sep string) string {
 	}
 	return in
 }
+
+// containsSEP ..
+func containsSEP(s string) bool {
+	if strings.Contains(s, " ") || strings.Contains(s, "-") || strings.Contains(s, "/") {
+		return true
+	}
+	return false
+}

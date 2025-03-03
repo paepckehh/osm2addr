@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/f1monkey/phonetic/soundex"
 	"paepcke.de/osm2addr/internal/model"
 	"paepcke.de/osm2addr/internal/pbf"
 )
@@ -107,6 +108,8 @@ func pbfparser(target *Target) {
 							addrComplete++
 							if t.Country == target.Country {
 								uniformErr = uniformErr + t.uniform()
+								e := soundex.NewEncoder()
+								t.CityPhonetic = e.Encode(t.City)
 								targets <- &t
 							}
 						}

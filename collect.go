@@ -14,6 +14,7 @@ func collect(targetCountry string) {
 	c, s, p := make(map[string]bool), make(map[string]bool), make(map[string]bool)
 	postcode2city, postcode2street := make(map[string]map[string]bool), make(map[string]map[string]bool)
 	city2postcode, city2street := make(map[string]map[string]bool), make(map[string]map[string]bool)
+	postcode2cityPhonetic := make(map[string]map[string]string)
 
 	// range over targets channel
 	for t := range targets {
@@ -26,19 +27,30 @@ func collect(targetCountry string) {
 		// scope CC:postcode:city
 		if _, ok := postcode2city[t.Postcode]; !ok {
 			postcode2city[t.Postcode] = make(map[string]bool)
+			postcode2cityPhonetic[t.Postcode] = make(map[string]string)
+		}
+		city, ok := postcode2cityPhonetic[t.Postcode][t.CityPhonetic]
+		switch ok {
+		case false:
+			postcode2cityPhonetic[t.Postcode][t.CityPhonetic] = t.City
+		case true:
+			if t.City != city && !containsSEP(city) && !containsSEP(t.City) {
+				fmt.Printf("\n[INFO] Phonetic:%v # Postcode:%v # City:%v <===> City:%v", t.CityPhonetic, t.Postcode, city, t.City)
+			}
 		}
 		if !postcode2city[t.Postcode][t.City] {
-			for key, _ := range postcode2city[t.Postcode] {
-				distance := levenshtein.ComputeDistance(key, t.City)
+			for city, _ := range postcode2city[t.Postcode] {
+				distance := levenshtein.ComputeDistance(city, t.City)
 				if distance < 2 {
-					fmt.Printf("\n[INFO] Levenshtein:%v # Postcode:%v # City:%v <===> City:%v", distance, t.Postcode, key, t.City)
-					t.City = key
+					fmt.Printf("\n[INFO] Levenshtein:%v # Postcode:%v # City:%v <===> City:%v", distance, t.Postcode, city, t.City)
+					t.City = city
 					tid := id(t.Country + t.Postcode + t.City + t.Street)
 					tidb64 := tid.hex()
 					if _, ok := sets[tidb64]; ok {
-						continue
+						break
 					}
 				}
+
 			}
 			postcode2city[t.Postcode][t.City] = true
 		}
