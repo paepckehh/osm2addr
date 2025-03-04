@@ -1,6 +1,6 @@
 module paepcke.de/osm2addr
 
-go 1.23.5
+go 1.23.6
 
 require (
 	github.com/agnivade/levenshtein v1.2.1
