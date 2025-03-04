@@ -18,11 +18,13 @@ type Target struct {
 
 // TagSET ...
 type TagSET struct {
-	Country      string `json:"-"`
-	City         string `json:"city"`
-	Street       string `json:"street"`
-	Postcode     string `json:"postcode"`
-	CityPhonetic string `json:"cityPhonetic"`
+	Country       string `json:"-"`
+	City          string `json:"city"`
+	Street        string `json:"street"`
+	Postcode      string `json:"postcode"`
+	CitySoundex   string `json:"citySoundex"`
+	CityMetaphone string `json:"cityMetaphone"`
+	CityCologne   string `json:"cityCologne"`
 }
 
 // global channel and mutex

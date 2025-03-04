@@ -2,6 +2,7 @@ package osm2addr
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/agnivade/levenshtein"
 )
@@ -14,7 +15,7 @@ func collect(targetCountry string) {
 	c, s, p := make(map[string]bool), make(map[string]bool), make(map[string]bool)
 	postcode2city, postcode2street := make(map[string]map[string]bool), make(map[string]map[string]bool)
 	city2postcode, city2street := make(map[string]map[string]bool), make(map[string]map[string]bool)
-	postcode2cityPhonetic := make(map[string]map[string]string)
+	postcode2cityCologne := make(map[string]map[string]string)
 
 	// range over targets channel
 	for t := range targets {
@@ -27,22 +28,22 @@ func collect(targetCountry string) {
 		// scope CC:postcode:city
 		if _, ok := postcode2city[t.Postcode]; !ok {
 			postcode2city[t.Postcode] = make(map[string]bool)
-			postcode2cityPhonetic[t.Postcode] = make(map[string]string)
+			postcode2cityCologne[t.Postcode] = make(map[string]string)
 		}
-		city, ok := postcode2cityPhonetic[t.Postcode][t.CityPhonetic]
+		city, ok := postcode2cityCologne[t.Postcode][t.CityCologne]
 		switch ok {
 		case false:
-			postcode2cityPhonetic[t.Postcode][t.CityPhonetic] = t.City
+			postcode2cityCologne[t.Postcode][t.CityCologne] = t.City
 		case true:
-			if t.City != city && !containsSEP(city) && !containsSEP(t.City) {
-				fmt.Printf("\n[INFO] Phonetic:%v # Postcode:%v # City:%v <===> City:%v", t.CityPhonetic, t.Postcode, city, t.City)
+			if t.City != city && !containsSEP(city) && !containsSEP(t.City) && !strings.Contains(city, "titz") {
+				fmt.Printf("\n[INFO] Phonetic:%v \t# Postcode:%v \t# City:%v <===> City:%v", t.CityCologne, t.Postcode, city, t.City)
 			}
 		}
 		if !postcode2city[t.Postcode][t.City] {
 			for city, _ := range postcode2city[t.Postcode] {
 				distance := levenshtein.ComputeDistance(city, t.City)
 				if distance < 2 {
-					fmt.Printf("\n[INFO] Levenshtein:%v # Postcode:%v # City:%v <===> City:%v", distance, t.Postcode, city, t.City)
+					fmt.Printf("\n[INFO] Levenshtein:%v \t# Postcode:%v \t# City:%v <===> City:%v", distance, t.Postcode, city, t.City)
 					t.City = city
 					tid := id(t.Country + t.Postcode + t.City + t.Street)
 					tidb64 := tid.hex()
