@@ -36,14 +36,14 @@ func collect(targetCountry string) {
 			postcode2cityCologne[t.Postcode][t.CityCologne] = t.City
 		case true:
 			if t.City != city && !containsSEP(city) && !containsSEP(t.City) && !strings.Contains(city, "titz") {
-				fmt.Printf("\n[INFO] Phonetic:%v \t# Postcode:%v \t# City:%v <===> City:%v", t.CityCologne, t.Postcode, city, t.City)
+				fmt.Printf("\n[INFO] Phonetic:%v \t# Postcode:%v \t# City:%v  \t<===> \tCity:%v", t.CityCologne, t.Postcode, city, t.City)
 			}
 		}
 		if !postcode2city[t.Postcode][t.City] {
 			for city, _ := range postcode2city[t.Postcode] {
 				distance := levenshtein.ComputeDistance(city, t.City)
 				if distance < 2 {
-					fmt.Printf("\n[INFO] Levenshtein:%v \t# Postcode:%v \t# City:%v <===> City:%v", distance, t.Postcode, city, t.City)
+					fmt.Printf("\n[INFO] Levenshtein:%v \t# Postcode:%v \t# City:%v  \t<===> \tCity:%v", distance, t.Postcode, city, t.City)
 					t.City = city
 					tid := id(t.Country + t.Postcode + t.City + t.Street)
 					tidb64 := tid.hex()
