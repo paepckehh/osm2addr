@@ -18,13 +18,38 @@ type Target struct {
 
 // TagSET ...
 type TagSET struct {
-	Country       string `json:"-"`
-	City          string `json:"city"`
-	Street        string `json:"street"`
-	Postcode      string `json:"postcode"`
-	CitySoundex   string `json:"citySoundex"`
-	CityMetaphone string `json:"cityMetaphone"`
-	CityCologne   string `json:"cityCologne"`
+	Country  string `json:"-"`
+	City     string `json:"city"`
+	Street   string `json:"street"`
+	Postcode string `json:"postcode"`
+}
+
+// PLACE ...
+type PLACE struct {
+	CC []COUNTRY
+}
+
+// COUNTRY ..
+type COUNTRY struct {
+	Country string `json:"country"`
+	PO      []POSTCODE
+}
+
+// POSTCODE
+type POSTCODE struct {
+	Postcode string `json:"postcode"`
+	CI       []CITY
+}
+
+// CITY
+type CITY struct {
+	City string `json:"city"`
+	ST   []STREET
+}
+
+// STREET
+type STREET struct {
+	Street string `json:"street"`
 }
 
 // global channel and mutex

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/f1monkey/phonetic/cologne"
 	"paepcke.de/osm2addr/internal/model"
 	"paepcke.de/osm2addr/internal/pbf"
 )
@@ -107,9 +106,7 @@ func pbfparser(target *Target) {
 						if t.Postcode != "" && t.City != "" && t.Street != "" {
 							addrComplete++
 							if t.Country == target.Country {
-								uniformErr = uniformErr + t.uniform()
-								co := cologne.NewEncoder()
-								t.CityCologne = co.Encode(t.City)
+								uniformErr += t.uniform()
 								targets <- &t
 							}
 						}

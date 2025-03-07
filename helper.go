@@ -7,6 +7,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/f1monkey/phonetic/cologne"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -24,6 +25,18 @@ func id(in string) ObjectID {
 // convert a objectID into a hex string
 func (in *ObjectID) hex() string {
 	return hex.EncodeToString(in[:])
+}
+
+// phoneticCollision ...
+func phoneticCollision(in1, in2 string) bool {
+	if !containsSEP(in1) && !containsSEP(in2) && !strings.Contains(in1, "titz") {
+		e1 := cologne.NewEncoder()
+		e2 := cologne.NewEncoder()
+		if e1.Encode(in1) == e2.Encode(in2) {
+			return true
+		}
+	}
+	return false
 }
 
 // isLatin1 ...
