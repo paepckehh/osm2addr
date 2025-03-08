@@ -22,7 +22,7 @@ type street struct {
 }
 
 // collect ...
-func collect(targetCountry string) {
+func collect(target *Target) {
 
 	// init
 	var places []place

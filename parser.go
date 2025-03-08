@@ -19,7 +19,7 @@ func pbfparser(target *Target) {
 	}
 	defer d.Close()
 
-	// print osm file stats
+	// print startup info
 	fmt.Printf("\nOSM:PBF:File:URL      #  %v", d.Header.OsmosisReplicationBaseURL)
 	fmt.Printf("\nOSM:PBF:File:Repl:USM #  %v", d.Header.OsmosisReplicationSequenceNumber)
 	fmt.Printf("\nOSM:PBF:File:Repl:TS  #  %v", d.Header.OsmosisReplicationTimestamp)

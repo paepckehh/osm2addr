@@ -14,7 +14,12 @@
 ### HOW TO USE 
 Generate German (DE) Json mapping tables
 ```Shell 
-curl -O https://download.geofabrik.de/europe/germany-latest.osm.pbf
+curl --output germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
 go run paepcke.de/osm2addr/cmd/osm2addr@latest DE germany-latest.osm.pbf
 ls -la json/DE
+```
+
+Download optional German (DE) validated-preload dataset for postcode:location mapping
+```Shell 
+curl --output validated-preload/DE.csv https://downloads.suche-postleitzahl.org/v2/public/zuordnung_plz_ort.csv 
 ```

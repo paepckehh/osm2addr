@@ -28,7 +28,6 @@ func main() {
 			log.Fatal("[OSM2ADDR][ERROR][FATAL] Target Country Code, if specified, must be two digits (example: osm2addr DE)")
 		}
 		target.Country = os.Args[1]
-
 	}
 	if len(os.Args) > 2 {
 		t, err := os.Open(os.Args[2])
