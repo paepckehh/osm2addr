@@ -25,8 +25,9 @@ func pbfparser(target *Target) {
 	fmt.Printf("\nOSM:PBF:File:Repl:TS  #  %v", d.Header.OsmosisReplicationTimestamp)
 
 	// init parser stats
-	countries := make(map[string]bool)
-	nodes, objects, tags, country, postcode, city, street, countryErr, cityErr, streetErr, postcodeErr, uniformErr, addrComplete := 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	countries := make(map[country]bool)
+	nodeCounter, objectCounter, tagCounter, countryCounter, postcodeCounter, cityCounter, streetCounter := 0, 0, 0, 0, 0, 0, 0
+	countryErr, cityErr, streetErr, postcodeErr, uniformErr, addrComplete := 0, 0, 0, 0, 0, 0
 
 	for {
 		objs, err := d.Decode()
@@ -34,7 +35,7 @@ func pbfparser(target *Target) {
 			if err.Error() != "EOF" {
 				panic(err)
 			}
-			fmt.Printf("\nOSM:PBF:ObjectsParsed # %v", hu(objects))
+			fmt.Printf("\nOSM:PBF:ObjectsParsed # %v", hu(objectCounter))
 			fmt.Printf("\nOSM:PBF:AddrTags      # %v", hu(addrComplete))
 			fmt.Printf("\nOSM:PBF:Uniq:Country  # %v", hu(len(countries)))
 			fmt.Printf("\nOSM:PBF:Err:Uniform   # %v", hu(uniformErr))
@@ -46,20 +47,20 @@ func pbfparser(target *Target) {
 			return
 		}
 		for _, obj := range objs {
-			objects++
+			objectCounter++
 			switch o := obj.(type) {
 			case *model.Node:
-				nodes++
+				nodeCounter++
 				if len(o.Tags) > 0 {
 					t := TagSET{} // init new tag set
 					for tag, content := range o.Tags {
-						tags++
+						tagCounter++
 						if len(tag) > 8 && tag[:5] == "addr:" {
 							addrTag := strings.Split(tag, ":")
 							if len(addrTag) > 1 {
 								switch addrTag[1] {
 								case "country":
-									country++
+									countryCounter++
 									if len(content) != 2 {
 										countryErr++
 										continue
@@ -68,31 +69,31 @@ func pbfparser(target *Target) {
 										countryErr++
 										continue
 									}
-									t.Country = content
+									t.Country = country(content)
 								case "street":
-									street++
+									streetCounter++
 									l := len(content)
 									if l < 3 || l > 256 {
 										streetErr++
 										continue
 									}
-									t.Street = content
+									t.Street = street(content)
 								case "city":
-									city++
+									cityCounter++
 									l := len(content)
 									if l < 3 || l > 256 {
 										cityErr++
 										continue
 									}
-									t.City = content
+									t.City = city(content)
 								case "postcode":
-									postcode++
+									postcodeCounter++
 									l := len(content)
 									if l < 3 || l > 256 {
 										postcodeErr++
 										continue
 									}
-									t.Postcode = content
+									t.Postcode = postcode(content)
 								}
 
 							}
@@ -100,12 +101,12 @@ func pbfparser(target *Target) {
 					}
 
 					if t.Country != "" {
-						if !countries[t.Country] {
-							countries[t.Country] = true
+						if !countries[country(t.Country)] {
+							countries[country(t.Country)] = true
 						}
 						if t.Postcode != "" && t.City != "" && t.Street != "" {
 							addrComplete++
-							if t.Country == target.Country {
+							if t.Country == country(target.Country) {
 								uniformErr += t.uniform()
 								targets <- &t
 							}

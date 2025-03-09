@@ -10,20 +10,31 @@ type ObjectID [12]byte
 
 // Target ...
 type Target struct {
-	Worker          int
-	Country         string
-	File            *os.File
-	FileName        string
-	PreLoadFile     *os.File
-	PreLoadFilename string
+	Worker   int
+	Country  string
+	File     *os.File
+	FileName string
+	PreLoad  struct {
+		File           *os.File
+		Filename       string
+		Fields         int
+		City           int
+		Postcode       int
+		PostcodeLenght int
+	}
 }
+
+type country string  // `json:"postcode"`
+type postcode string // `json:"postcode"`
+type city string     // `json:"city"`
+type street string   // `json:"street"`
 
 // TagSET ...
 type TagSET struct {
-	Country  string `json:"-"`
-	City     string `json:"city"`
-	Street   string `json:"street"`
-	Postcode string `json:"postcode"`
+	Country  country  // `json:"-"`
+	Postcode postcode // `json:"postcode"`
+	City     city     // `json:"city"`
+	Street   street   // `json:"street"`
 }
 
 // global channel and mutex

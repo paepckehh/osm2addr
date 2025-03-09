@@ -4,31 +4,66 @@ import (
 	"fmt"
 )
 
+// place ...
+type place struct {
+	postcode string `json:"postcode"`
+	cities   []city `json:"cities"`
+}
+
+// city ...
+type city struct {
+	name    string   `json:"city"`
+	streets []street `json:"streets"`
+}
+
+// street ...
+type street struct {
+	name     string `json:"street"`
+	objectID string `json:"objectID"`
+}
+
 // collect ...
 func collect(target *Target) {
 
 	// init
-	var ok bool
+	var places []place
+	var postcodeExists bool
 	placeIDs := make(map[ObjectID]bool)
-	places := make(map[postcode]map[city]map[street]ObjectID)
 
 	// range over targets channel
 	for t := range targets {
-		placeid := id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
+		placeid := id(t.Country + t.Postcode + t.City + t.Street)
 		if placeIDs[placeid] {
-			continue // place found, skip early
+			continue // place found, skip
 		}
-		if _, ok = places[t.Postcode]; !ok {
-			places[t.Postcode] = make(map[city]map[street]ObjectID)
-			places[t.Postcode][t.City] = make(map[street]ObjectID)
-			if t.Street != "" {
-				places[t.Postcode][t.City][t.Street] = placeid
+		postcodeExists = false
+		for _, place := range places {
+			if place.postcode == t.Postcode {
+				postcodeExists = true
+				for _, city := range place.cities {
+					if city.name == t.City {
+						for _, street := range city.streets {
+							if street.name == t.Street {
+								panic("internal error, please report to developer team: placeIDs map-catcher faild") // unrechable
+							}
+						}
+					}
+				}
+			}
+		}
+		if !postcodeExists {
+			if t.Street == "" {
+				p := place{
+					postcode: t.Postcode,
+					cities:   []city{city{name: t.City, streets: []street{}}},
+				}
+				places = append(places, p)
 			}
 		}
 		placeIDs[placeid] = true
 	}
 	fmt.Printf("\nOSM:Collect:Places    # %v", hu(len(placeIDs)))
-	//fmt.Printf("\n %v", places)
+	fmt.Printf("\n %v", places)
 	writeJsonFile(target.Country, "id.json", places)
 	collector.Done()
 }

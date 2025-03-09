@@ -71,7 +71,7 @@ func hu(in int) string {
 	p := message.NewPrinter(language.German)
 	h := p.Sprintf("%d", in)
 	for {
-		if len(h) < 11 {
+		if len(h) < 12 {
 			h = " " + h
 			continue
 		}
