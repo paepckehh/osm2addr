@@ -7,7 +7,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/f1monkey/phonetic/cologne"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -23,20 +22,8 @@ func id(in string) ObjectID {
 }
 
 // convert a objectID into a hex string
-func (in *ObjectID) hex() string {
-	return hex.EncodeToString(in[:])
-}
-
-// phoneticCollision ...
-func phoneticCollision(in1, in2 string) bool {
-	if !containsSEP(in1) && !containsSEP(in2) && !strings.Contains(in1, "titz") {
-		e1 := cologne.NewEncoder()
-		e2 := cologne.NewEncoder()
-		if e1.Encode(in1) == e2.Encode(in2) {
-			return true
-		}
-	}
-	return false
+func (in *ObjectID) hex() ObjectIdHex {
+	return ObjectIdHex(hex.EncodeToString(in[:]))
 }
 
 // isLatin1 ...
@@ -71,7 +58,7 @@ func hu(in int) string {
 	p := message.NewPrinter(language.German)
 	h := p.Sprintf("%d", in)
 	for {
-		if len(h) < 12 {
+		if len(h) < 11 {
 			h = " " + h
 			continue
 		}
@@ -118,10 +105,14 @@ func camelCaseSep(in, sep string) string {
 	return in
 }
 
-// containsSEP ..
-func containsSEP(s string) bool {
-	if strings.Contains(s, " ") || strings.Contains(s, "-") || strings.Contains(s, "/") {
-		return true
-	}
-	return false
-}
+// phoneticCollision ...
+//func phoneticCollision(in1, in2 string) bool {
+//	if !containsSEP(in1) && !containsSEP(in2) && !strings.Contains(in1, "titz") {
+//		e1 := cologne.NewEncoder()
+//		e2 := cologne.NewEncoder()
+//		if e1.Encode(in1) == e2.Encode(in2) {
+//			return true
+//		}
+//	}
+//	return false
+//}

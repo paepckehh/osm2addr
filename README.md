@@ -12,52 +12,52 @@
 # osm2addr
 ## Parse, extract and uniform OSM OpenStreetMap Open Source Data into json (postal) address validation DB mapping tables (MongoDB,..)
 ### HOW TO USE
-Generate German (DE) Json mapping tables
-requirements: curl/wget and golang 1.23+ 
 
-```Shell 
-curl -O https://download.geofabrik.de/europe/germany-latest.osm.pbf
-go run paepcke.de/osm2addr/cmd/osm2addr@latest DE germany-latest.osm.pbf
-ls -la DE
-```
-
-### EXAMPLE RUN (EXAMPLE DATA OUTPUT see example-json-output folder)
 ```Shell
-# make
-make -C cmd/osm2addr all
-make[1]: Entering directory '/home/me/projects/osm2addr/cmd/osm2addr'
-go run main.go DE ../../data/germany-latest.osm.pbf
+mkdir -p data/validated-preload
+curl --output data/germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf 
+curl --output data/validated-preload/DE.csv https://downloads.suche-postleitzahl.org/v2/public/zuordnung_plz_ort.csv 
+go run paepcke.de/osm2addr/cmd/osm2addr@latest DE data/germany-latest.osm.pbf
 
-OSM:Startup           #  2025-03-04 08:33:50.436969384 +0000 UTC m=+0.000438993
-OSM:TargetCountry     #  DE
-OSM:WorkerScale       #  1
-OSM:File              #  ../../data/germany-latest.osm.pbf
-OSM:PBF:File:URL      #  https://download.geofabrik.de/europe/germany-updates
-OSM:PBF:File:Repl:USM #  4330
-OSM:PBF:File:Repl:TS  #  2025-02-13 21:21:14 +0000 UTC
-[INFO] Phonetic:172781 	# Postcode:24398 	# City:Bordersby  	<===> 	City:Brodersby
-[INFO] Phonetic:1438 	# Postcode:17398 	# City:Bugewitz  	<===> 	City:Bugewtz
-[INFO] Levenshtein:1 	# Postcode:17398 	# City:Bugewitz  	<===> 	City:Bugewtz
-[INFO] Phonetic:227685 	# Postcode:83623 	# City:Dietramszell <===> 	City:Deitramszell
-[INFO] Levenshtein:1 	# Postcode:04779 	# City:Wermsdorf  	<===> 	City:Wermsorf
-[INFO] Phonetic:485764 	# Postcode:94333 	# City:Geiselhöring <===> 	City:Geiselhörnig
-[INFO] Levenshtein:1 	# Postcode:94051 	# City:Hauzenberg  	<===> 	City:Haunzenberg
-[INFO] Phonetic:172781 	# Postcode:24398 	# City:Bordersby  	<===> 	City:Brodersby
-[INFO] Phonetic:06174 	# Postcode:22395 	# City:Hamburg  	<===> 	City:Hanburg
-[INFO] Levenshtein:1 	# Postcode:22395 	# City:Hamburg  	<===> 	City:Hanburg
-OSM:PBF:ObjectsParsed # 411.113.874
-OSM:PBF:AddrTags      #   2.711.889
-OSM:PBF:Uniq:Country  #          10
-OSM:PBF:Err:Uniform   #      21.854
-OSM:PBF:Err:Country   #           0
-OSM:PBF:Err:Postcode  #           0
-OSM:PBF:Err:City      #          17
-OSM:PBF:Err:Street    #         162
-OSM:Uniq:City         #       8.036
-OSM:Uniq:Street       #     120.545
-OSM:Uniq:Postcode     #       7.541
-OSM:Collect:Sets      #     265.631
-OSM:TotalTime:        #  53.433263097s
+OSM:Startup               # 2025-03-10 09:23:45.921159027 +0000 UTC m=+0.000386754
+OSM:TargetCountry         # DE
+OSM:WorkerScale           # 1
+OSM:File                  # germany-latest.osm.pbf
+----------------------------------------------------------------------------------
+OSM:PreLoadFile           # validated-preload/DE.csv
+OSM:PreLoadFile:Fail      # 1
+OSM:PreLoadFile:Total     # 12853
+OSM:Writer:JSON           # json/DE/error.preload.json
+----------------------------------------------------------------------------------
+OSM:PBF:File:URL          # https://download.geofabrik.de/europe/germany-updates
+OSM:PBF:File:Repl:USM     # 4330
+OSM:PBF:File:Repl:TS      # 2025-02-13 21:21:14 +0000 UTC
+----------------------------------------------------------------------------------
+OSM:PBF:Parsed:Objects    # 411.113.874
+OSM:PBF:Parsed:Tags       #  71.720.811
+OSM:PBF:Parsed:Country    #   2.792.983
+OSM:PBF:Parsed:Street     #   3.905.365
+OSM:PBF:Parsed:City       #   3.659.945
+OSM:PBF:Parsed:Postcode   #   3.513.835
+----------------------------------------------------------------------------------
+OSM:PBF:Complete:AddrTags #   2.711.889
+OSM:PBF:Uniq:Country      #          10
+OSM:PBF:Err:Uniform       #      21.854
+OSM:PBF:Err:Country       #           0
+OSM:PBF:Err:Postcode      #           0
+OSM:PBF:Err:City          #          17
+OSM:PBF:Err:Street        #         162
+----------------------------------------------------------------------------------
+OSM:Corrected:Auto:Cases  #          78
+OSM:Corrected:Auto:Total  #      21.082
+OSM:Corrected:Warn:Cases  #           8
+OSM:Corrected:Warn:Total  #           8
+OSM:Collect:Places:Total  #     278.381
+----------------------------------------------------------------------------------
+OSM:Writer:JSON           # json/DE/id.json
+OSM:Writer:JSON           # json/DE/warning.json
+OSM:Writer:JSON           # json/DE/corrected.json
+OSM:Time:Total            # 45.329429572s
 ```
 
 ### FEATURES

@@ -12,7 +12,7 @@ func (t *TagSET) uniformDE() int {
 		// fmt.Printf("[City][Latin1][%v]%v", t.Country, t.City)
 		return 1
 	}
-	if !isLatin1(string(t.Street)) {
+	if t.Street != "" && !isLatin1(string(t.Street)) {
 		// fmt.Printf("[Street][Latin1][%v]%v", t.Country, t.Street)
 		return 1
 	}
@@ -31,40 +31,20 @@ func (t *TagSET) uniformDE() int {
 		// fmt.Printf("[Postcode][%v]%v", t.Country, t.Postcode)
 		return 1
 	}
-	switch p {
-	case 99334:
-		if strings.Contains(string(t.City), "Elxleben") {
-			t.City = "Elxleben am Steiger"
-			count++
-		}
-	case 25761:
-		if strings.Contains(string(t.City), "Westerdeichstrich") {
-			t.City = "Westerdeichstrich (Kreis Dithmarschen)"
-			count++
-		}
-	case 25862:
-		if strings.Contains(string(t.City), "Goldelund") {
-			t.City = "Goldelund Nordfriesland"
-			count++
-		}
-	case 93453:
-		if strings.Contains(string(t.City), "Neukirchen") {
-			t.City = "Neukirchen b.Hl.Blut"
-			count++
-		}
-	}
 	var ok bool
-	if ok, t.City = tryNormCityDE(t.City); !ok {
+	if t.City, ok = tryNormCityDE(t.City); !ok {
 		count++
 	}
-	if ok, t.Street = tryNormStreetDE(t.Street); !ok {
-		count++
+	if t.Street != "" {
+		if t.Street, ok = tryNormStreetDE(t.Street); !ok {
+			count++
+		}
 	}
 	return count
 }
 
 // tryNormStreetDE ...
-func tryNormStreetDE(in street) (bool, street) {
+func tryNormStreetDE(in street) (street, bool) {
 	s := string(in)
 	s = strings.ReplaceAll(s, "Strasse", "Straße")
 	s = strings.ReplaceAll(s, "Str.", "Straße")
@@ -74,13 +54,13 @@ func tryNormStreetDE(in street) (bool, street) {
 	s = strings.ReplaceAll(s, "strasse", "straße")
 	if street(s) != in {
 		// fmt.Printf("\n[UNIFORM][CITY][DE] IN-City:%v ======> OUT-City:%v", in, s)
-		return false, street(s)
+		return street(s), false
 	}
-	return true, street(s)
+	return street(s), true
 }
 
 // tryNormCityDE ...
-func tryNormCityDE(in city) (bool, city) {
+func tryNormCityDE(in city) (city, bool) {
 	s := string(in)
 	if strings.Contains(s, ".") {
 		s = tryNormCityDEShortcut(s)
@@ -89,9 +69,9 @@ func tryNormCityDE(in city) (bool, city) {
 	s = tryNormCityDETypo(s)
 	if s != string(in) {
 		// fmt.Printf("\n[UNIFORM][CITY][DE] IN-City:%v ======> OUT-City:%v", in, s)
-		return false, city(s)
+		return city(s), false
 	}
-	return true, city(s)
+	return city(s), true
 }
 
 // tryNormCityDETypo ...

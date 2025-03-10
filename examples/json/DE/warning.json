@@ -1,0 +1,14 @@
+{
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:04779][CITY]#Wermsdorf#Wermsorf#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:17398][CITY]#Bugewitz#Bugewtz#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:18249][CITY]#Tarnow#Warnow#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:22395][CITY]#Hamburg#Hanburg#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:25557][CITY]#Beldorf#Bendorf#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:25761][CITY]#Oesterdeichstrich#Westerdeichstrich#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:25862][CITY]#Goldelund#Joldelund#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:54317][CITY]#Lorscheid#Morscheid#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:54636][CITY]#Idenheim#Idesheim#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:93453][CITY]#Neukirchen bei Hl.Blut#Neukirchen bei Hl. Blut#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:94051][CITY]#Hauzenberg#Haunzenberg#": 1,
+	"[WARNING][LEVENSHTEIN:1][POSTCODE:99334][CITY]#Elleben#Elxleben#": 1
+}

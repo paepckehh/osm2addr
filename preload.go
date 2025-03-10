@@ -6,20 +6,29 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 )
 
 // preloadFeed ...
 func (target *Target) preloadFeed() {
 	if target.checkPreloadFile() {
-		fmt.Printf("\nOSM:PreLoadFile       #  %v", target.PreLoad.Filename)
+
+		// init
+		fail, failCounter, counter, uniformCounter, ok := make(map[string]int), 0, 0, 0, false
 		defer target.PreLoad.File.Close()
-		counter := 0
+
+		// report
+		fmt.Printf("\n----------------------------------------------------------------------------------")
+		fmt.Printf("\nOSM:PreLoadFile           # %v", target.PreLoad.Filename)
+
+		// setup
 		r := csv.NewReader(target.PreLoad.File)
 		r.Comma = ','
 		r.FieldsPerRecord = target.PreLoad.Fields
 		r.LazyQuotes = false
 		r.ReuseRecord = true
+		_, _ = r.Read() // skip head
+
+		// loop
 		for {
 			row, err := r.Read()
 			if err != nil {
@@ -28,27 +37,37 @@ func (target *Target) preloadFeed() {
 				}
 				panic(err)
 			}
-			if len(row[target.PreLoad.City]) < 3 {
-				// log.Printf("PreLoad:Error:CityLenght %v \t => %v ", row[target.PreLoad.Postcode], row[target.PreLoad.City])
+			if len(row[target.PreLoad.City]) < 2 {
+				e := fmt.Sprintf("[ERROR][PRE][CITY][LENGHT]#%v#%v#", row[target.PreLoad.Postcode], row[target.PreLoad.City])
+				if _, ok = fail[e]; !ok {
+					fail[e] = 0
+				}
+				fail[e]++
+				failCounter++
 				continue
 			}
 			if len(row[target.PreLoad.Postcode]) != target.PreLoad.PostcodeLenght {
-				// log.Printf("PreLoad:Error:PostcodeLenght %v \t => %v ", row[target.PreLoad.Postcode], row[target.PreLoad.City])
+				e := fmt.Sprintf("[ERROR][PRE][POSTCODE][LENGHT]#%v#%v#", row[target.PreLoad.Postcode], row[target.PreLoad.City])
+				if _, ok = fail[e]; !ok {
+					fail[e] = 0
+				}
+				fail[e]++
+				failCounter++
 				continue
 			}
-			_, err = strconv.Atoi(row[target.PreLoad.Postcode])
-			if err != nil {
-				// log.Printf("PreLoad:Error:IsInteger %v \t => %v ", row[target.PreLoad.Postcode], row[target.PreLoad.City])
-				continue
-			}
-			targets <- &TagSET{
+			t := &TagSET{
 				Postcode: postcode(row[target.PreLoad.Postcode]),
 				City:     city(row[target.PreLoad.City]),
+				Country:  country(target.Country),
 			}
+			uniformCounter += t.uniform()
+			targets <- t
 			counter++
 
 		}
-		fmt.Printf("\nOSM:PreLoadFile:Done  #  %v", counter)
+		fmt.Printf("\nOSM:PreLoadFile:Fail      # %v", failCounter)
+		fmt.Printf("\nOSM:PreLoadFile:Total     # %v", counter)
+		writeJsonFile(target.Country, "error.preload.json", fail)
 		preload.Done()
 	}
 }
@@ -74,10 +93,10 @@ func (target *Target) checkPreloadFile() bool {
 	}
 	if os.IsNotExist(err) {
 		target.PreLoad.Filename = "n/a"
-		fmt.Printf("\nOSM:PreLoadFile       #  %v", target.PreLoad.Filename)
+		fmt.Printf("\nOSM:PreLoadFile           # %v", target.PreLoad.Filename)
 		return false
 	}
 	target.PreLoad.Filename = err.Error()
-	fmt.Printf("\nOSM:PreLoadFile:Error #  %v", target.PreLoad.Filename)
+	fmt.Printf("\nOSM:PreLoadFile:Error     # %v", target.PreLoad.Filename)
 	return false
 }

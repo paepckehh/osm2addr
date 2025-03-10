@@ -20,13 +20,14 @@ func pbfparser(target *Target) {
 	defer d.Close()
 
 	// print startup info
-	fmt.Printf("\nOSM:PBF:File:URL      #  %v", d.Header.OsmosisReplicationBaseURL)
-	fmt.Printf("\nOSM:PBF:File:Repl:USM #  %v", d.Header.OsmosisReplicationSequenceNumber)
-	fmt.Printf("\nOSM:PBF:File:Repl:TS  #  %v", d.Header.OsmosisReplicationTimestamp)
+	fmt.Printf("\n----------------------------------------------------------------------------------")
+	fmt.Printf("\nOSM:PBF:File:URL          # %v", d.Header.OsmosisReplicationBaseURL)
+	fmt.Printf("\nOSM:PBF:File:Repl:USM     # %v", d.Header.OsmosisReplicationSequenceNumber)
+	fmt.Printf("\nOSM:PBF:File:Repl:TS      # %v", d.Header.OsmosisReplicationTimestamp)
 
 	// init parser stats
 	countries := make(map[country]bool)
-	nodeCounter, objectCounter, tagCounter, countryCounter, postcodeCounter, cityCounter, streetCounter := 0, 0, 0, 0, 0, 0, 0
+	objectCounter, tagCounter, countryCounter, postcodeCounter, cityCounter, streetCounter := 0, 0, 0, 0, 0, 0
 	countryErr, cityErr, streetErr, postcodeErr, uniformErr, addrComplete := 0, 0, 0, 0, 0, 0
 
 	for {
@@ -35,14 +36,21 @@ func pbfparser(target *Target) {
 			if err.Error() != "EOF" {
 				panic(err)
 			}
-			fmt.Printf("\nOSM:PBF:ObjectsParsed # %v", hu(objectCounter))
-			fmt.Printf("\nOSM:PBF:AddrTags      # %v", hu(addrComplete))
-			fmt.Printf("\nOSM:PBF:Uniq:Country  # %v", hu(len(countries)))
-			fmt.Printf("\nOSM:PBF:Err:Uniform   # %v", hu(uniformErr))
-			fmt.Printf("\nOSM:PBF:Err:Country   # %v", hu(countryErr))
-			fmt.Printf("\nOSM:PBF:Err:Postcode  # %v", hu(postcodeErr))
-			fmt.Printf("\nOSM:PBF:Err:City      # %v", hu(cityErr))
-			fmt.Printf("\nOSM:PBF:Err:Street    # %v", hu(streetErr))
+			fmt.Printf("\n----------------------------------------------------------------------------------")
+			fmt.Printf("\nOSM:PBF:Parsed:Objects    # %v", hu(objectCounter))
+			fmt.Printf("\nOSM:PBF:Parsed:Tags       # %v", hu(tagCounter))
+			fmt.Printf("\nOSM:PBF:Parsed:Country    # %v", hu(countryCounter))
+			fmt.Printf("\nOSM:PBF:Parsed:Street     # %v", hu(streetCounter))
+			fmt.Printf("\nOSM:PBF:Parsed:City       # %v", hu(cityCounter))
+			fmt.Printf("\nOSM:PBF:Parsed:Postcode   # %v", hu(postcodeCounter))
+			fmt.Printf("\n----------------------------------------------------------------------------------")
+			fmt.Printf("\nOSM:PBF:Complete:AddrTags # %v", hu(addrComplete))
+			fmt.Printf("\nOSM:PBF:Uniq:Country      # %v", hu(len(countries)))
+			fmt.Printf("\nOSM:PBF:Err:Uniform       # %v", hu(uniformErr))
+			fmt.Printf("\nOSM:PBF:Err:Country       # %v", hu(countryErr))
+			fmt.Printf("\nOSM:PBF:Err:Postcode      # %v", hu(postcodeErr))
+			fmt.Printf("\nOSM:PBF:Err:City          # %v", hu(cityErr))
+			fmt.Printf("\nOSM:PBF:Err:Street        # %v", hu(streetErr))
 			parser.Done()
 			return
 		}
@@ -50,7 +58,6 @@ func pbfparser(target *Target) {
 			objectCounter++
 			switch o := obj.(type) {
 			case *model.Node:
-				nodeCounter++
 				if len(o.Tags) > 0 {
 					t := TagSET{} // init new tag set
 					for tag, content := range o.Tags {
@@ -81,7 +88,7 @@ func pbfparser(target *Target) {
 								case "city":
 									cityCounter++
 									l := len(content)
-									if l < 3 || l > 256 {
+									if l < 2 || l > 256 {
 										cityErr++
 										continue
 									}

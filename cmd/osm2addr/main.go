@@ -40,10 +40,10 @@ func main() {
 	}
 
 	// report
-	fmt.Printf("\nOSM:Startup           #  %v", ts)
-	fmt.Printf("\nOSM:TargetCountry     #  %v", target.Country)
-	fmt.Printf("\nOSM:WorkerScale       #  %v", target.Worker)
-	fmt.Printf("\nOSM:File              #  %v", target.FileName)
+	fmt.Printf("\nOSM:Startup               # %v", ts)
+	fmt.Printf("\nOSM:TargetCountry         # %v", target.Country)
+	fmt.Printf("\nOSM:WorkerScale           # %v", target.Worker)
+	fmt.Printf("\nOSM:File                  # %v", target.FileName)
 
 	// open file
 	target.File, err = os.Open(target.FileName)
@@ -58,5 +58,5 @@ func main() {
 	}
 
 	// finish
-	fmt.Printf("\nOSM:TotalTime:        #  %v\n", time.Since(ts))
+	fmt.Printf("\nOSM:Time:Total            # %v\n", time.Since(ts))
 }

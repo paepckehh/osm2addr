@@ -4,11 +4,6 @@ all:
 clean:
 	rm -rf json
 
-examples:
-	go run main.go LU ../../data/germany-latest.osm.pbf
-	mkdir -p ../../example-json-output
-	cp -af json/LU ../../example-json-output/
-
 check: 
 	gofmt -w -s .
 	go vet .

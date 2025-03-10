@@ -7,6 +7,11 @@ import (
 
 // ObjectID ...
 type ObjectID [12]byte
+type ObjectIdHex string //`json:"objectid"`
+type country string     //`json:"postcode"`
+type postcode string    //`json:"postcode"`
+type city string        //`json:"city"`
+type street string      //`json:"street"`
 
 // Target ...
 type Target struct {
@@ -23,11 +28,6 @@ type Target struct {
 		PostcodeLenght int
 	}
 }
-
-type country string  // `json:"postcode"`
-type postcode string // `json:"postcode"`
-type city string     // `json:"city"`
-type street string   // `json:"street"`
 
 // TagSET ...
 type TagSET struct {

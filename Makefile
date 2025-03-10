@@ -6,9 +6,6 @@ all:
 clean:
 	make -C cmd/$(PROJECT) clean
 
-examples:
-	make -C cmd/$(PROJECT) examples
-
 deps: 
 	rm go.mod go.sum
 	go mod init paepcke.de/$(PROJECT)
@@ -26,11 +23,12 @@ check:
 ##########################
 
 update-de: 
-	mkdir -p data && cd data && curl -O https://download.geofabrik.de/europe/germany-latest.osm.pbf
+	mkdir -p data && curl --output data/germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
+	mkdir -p data/validated && curl --output data/validated-preload/DE.csv https://downloads.suche-postleitzahl.org/v2/public/zuordnung_plz_ort.csv 
 
 update-dach:
-	mkdir -p data && cd data && curl -O https://download.geofabrik.de/europe/dach-latest.osm.pbf
+	mkdir -p data && curl --output data/dach-latest.osm.pbf https://download.geofabrik.de/europe/dach-latest.osm.pbf
 
 update-eu: 
-	mkdir -p data && cd data && curl -O https://download.geofabrik.de/europe-latest.osm.pbf
+	mkdir -p data && curl --output data/europe-latest.osm.pbf https://download.geofabrik.de/europe-latest.osm.pbf
 
