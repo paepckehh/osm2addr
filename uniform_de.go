@@ -6,7 +6,7 @@ import (
 )
 
 // uniformDE
-func (t *TagSET) uniformDE() int {
+func (t *tagSet) uniformDE() int {
 	count := 0
 	if !isLatin1(string(t.City)) {
 		// fmt.Printf("[City][Latin1][%v]%v", t.Country, t.City)

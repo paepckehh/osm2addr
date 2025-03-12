@@ -1,7 +1,7 @@
 package osm2addr
 
 // uniform a tagSet
-func (t *TagSET) uniform() int {
+func (t *tagSet) uniform() int {
 	switch t.Country {
 	case "DE":
 		return t.uniformDE()

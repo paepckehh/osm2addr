@@ -17,23 +17,33 @@ func collect(target *Target) {
 	var ok bool
 	warning, warningCounter := make(map[string]int), 0
 	corrected, correctedCounter := make(map[string]int), 0
-	placeIDs := make(map[ObjectID]bool)
-	places := make(map[postcode]map[city]map[street]ObjectIdHex)
+	placeIDs := make(map[placeID]tagSet)
+	places := make(map[postcode]map[city]map[street]placeIdHex)
 
 	// range over targets channel
 	for t := range targets {
-		placeid := id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
-		if placeIDs[placeid] {
-			continue // skip early
+		pid := id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
+		if _, ok = placeIDs[pid]; ok {
+			continue
 		}
 		if _, ok = places[t.Postcode]; !ok {
-			places[t.Postcode] = make(map[city]map[street]ObjectIdHex)
-			places[t.Postcode][t.City] = make(map[street]ObjectIdHex)
-			if t.Street != "" {
-				places[t.Postcode][t.City][t.Street] = placeid.hex()
+			places[t.Postcode] = make(map[city]map[street]placeIdHex)
+			places[t.Postcode][t.City] = make(map[street]placeIdHex)
+			switch t.Street {
+			case "":
+				continue
+			default:
+				places[t.Postcode][t.City] = make(map[street]placeIdHex)
+				places[t.Postcode][t.City][t.Street] = pid.hex()
+				placeIDs[pid] = *t
+				e := fmt.Sprintf("[WARNING][NON-PRELOADED-POSTCODE-CITY-ADDED][POSTCODE:%v][CITY:%v]", t.Postcode, t.City)
+				if _, ok = warning[e]; !ok {
+					warning[e] = 0
+				}
+				warning[e]++
+				warningCounter++
+				continue
 			}
-			placeIDs[placeid] = true
-			continue
 		}
 		if _, ok = places[t.Postcode][t.City]; !ok {
 			for _, sep := range seps {
@@ -48,41 +58,35 @@ func collect(target *Target) {
 							corrected[e]++
 							correctedCounter++
 							t.City = ci
-							placeid = id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
-							if t.Street != "" {
-								places[t.Postcode][t.City][t.Street] = placeid.hex()
-							}
-							placeIDs[placeid] = true
+							pid = id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
 							break
 						}
 					}
 				}
 			}
-			if _, ok = places[t.Postcode][t.City]; !ok {
-				for ci := range places[t.Postcode] {
-					distance := levenshtein.ComputeDistance(string(ci), string(t.City))
-					if distance < 2 {
-						e := fmt.Sprintf("[WARNING][LEVENSHTEIN:%v][POSTCODE:%v][CITY]#%v#%v#", distance, t.Postcode, ci, t.City)
-						if _, ok = warning[e]; !ok {
-							warning[e] = 0
-						}
-						warning[e]++
-						warningCounter++
+			places[t.Postcode][t.City] = make(map[street]placeIdHex)
+			for ci := range places[t.Postcode] {
+				if string(ci) == string(t.City) {
+					continue
+				}
+				distance := levenshtein.ComputeDistance(string(ci), string(t.City))
+				if distance < 2 {
+					e := fmt.Sprintf("[WARNING][LEVENSHTEIN:%v][POSTCODE:%v][CITY]#%v#%v#", distance, t.Postcode, ci, t.City)
+					if _, ok = warning[e]; !ok {
+						warning[e] = 0
 					}
+					warning[e]++
+					warningCounter++
 				}
 			}
-			places[t.Postcode][t.City] = make(map[street]ObjectIdHex)
-			if t.Street != "" {
-				places[t.Postcode][t.City][t.Street] = placeid.hex()
-			}
-			placeIDs[placeid] = true
-			continue
+
 		}
-		if t.Street != "" {
+		switch t.Street {
+		case "":
+		default:
 			if _, ok = places[t.Postcode][t.City][t.Street]; !ok {
-				places[t.Postcode][t.City][t.Street] = placeid.hex()
-				placeIDs[placeid] = true
-				continue
+				places[t.Postcode][t.City][t.Street] = pid.hex()
+				placeIDs[pid] = *t
 			}
 		}
 	}
@@ -93,7 +97,13 @@ func collect(target *Target) {
 	fmt.Printf("\nOSM:Corrected:Warn:Total  # %v", hu(warningCounter))
 	fmt.Printf("\nOSM:Collect:Places:Total  # %v", hu(len(placeIDs)))
 	fmt.Printf("\n----------------------------------------------------------------------------------")
-	writeJsonFile(target.Country, "id.json", places)
+	p := make(map[string]tagSet, len(placeIDs))
+	for pid, tset := range placeIDs {
+		p[string(pid.hex())] = tset
+
+	}
+	writeJsonFile(target.Country, "placeID2addr.json", p)
+	writeJsonFile(target.Country, "addr2placeID.json", places)
 	writeJsonFile(target.Country, "warning.json", warning)
 	writeJsonFile(target.Country, "corrected.json", corrected)
 	collector.Done()

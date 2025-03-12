@@ -5,13 +5,13 @@ import (
 	"sync"
 )
 
-// ObjectID ...
-type ObjectID [12]byte
-type ObjectIdHex string //`json:"objectid"`
-type country string     //`json:"postcode"`
-type postcode string    //`json:"postcode"`
-type city string        //`json:"city"`
-type street string      //`json:"street"`
+// Schema ...
+type placeID [12]byte
+type placeIdHex string //`json:"placeid"`
+type country string    //`json:"country"`
+type postcode string   //`json:"postcode"`
+type city string       //`json:"city"`
+type street string     //`json:"street"`
 
 // Target ...
 type Target struct {
@@ -29,17 +29,17 @@ type Target struct {
 	}
 }
 
-// TagSET ...
-type TagSET struct {
-	Country  country  // `json:"-"`
-	Postcode postcode // `json:"postcode"`
-	City     city     // `json:"city"`
-	Street   street   // `json:"street"`
+// tagSet ...
+type tagSet struct {
+	Country  country  `json:"country"`
+	Postcode postcode `json:"postcode"`
+	City     city     `json:"city"`
+	Street   street   `json:"street"`
 }
 
 // global channel and mutex
 var preload, parser, collector sync.WaitGroup
-var targets = make(chan *TagSET)
+var targets = make(chan *tagSet)
 
 // Parse inut files
 func Parse(target *Target) error {

@@ -14,16 +14,16 @@ import (
 const _secretMAC = "nachtssindallekatzenblau"
 
 // convert a string into a repoduceable objectID
-func id(in string) ObjectID {
-	var o ObjectID
+func id(in string) placeID {
+	var o placeID
 	h := sha256.Sum256([]byte(in + _secretMAC))
 	copy(o[:], h[:12])
 	return o
 }
 
 // convert a objectID into a hex string
-func (in *ObjectID) hex() ObjectIdHex {
-	return ObjectIdHex(hex.EncodeToString(in[:]))
+func (in *placeID) hex() placeIdHex {
+	return placeIdHex(hex.EncodeToString(in[:]))
 }
 
 // isLatin1 ...

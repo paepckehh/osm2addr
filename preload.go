@@ -55,7 +55,7 @@ func (target *Target) preloadFeed() {
 				failCounter++
 				continue
 			}
-			t := &TagSET{
+			t := &tagSet{
 				Postcode: postcode(row[target.PreLoad.Postcode]),
 				City:     city(row[target.PreLoad.City]),
 				Country:  country(target.Country),

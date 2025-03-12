@@ -59,7 +59,7 @@ func pbfparser(target *Target) {
 			switch o := obj.(type) {
 			case *model.Node:
 				if len(o.Tags) > 0 {
-					t := TagSET{} // init new tag set
+					t := tagSet{} // init new tag set
 					for tag, content := range o.Tags {
 						tagCounter++
 						if len(tag) > 8 && tag[:5] == "addr:" {
