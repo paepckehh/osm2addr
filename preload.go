@@ -14,7 +14,11 @@ func (target *Target) preloadFeed() {
 
 		// init
 		fail, failCounter, counter, uniformCounter, ok := make(map[string]int), 0, 0, 0, false
-		defer target.PreLoad.File.Close()
+		defer func() {
+			if err := target.PreLoad.File.Close(); err != nil {
+				fmt.Printf("[OSM2ADDR][ERROR] unable to close file: %s", err)
+			}
+		}()
 
 		// report
 		fmt.Printf("\n----------------------------------------------------------------------------------")

@@ -41,7 +41,11 @@ type blob struct {
 func Generate(ctx context.Context, reader io.Reader) func(yield func(enc blob, err error) bool) {
 	return func(yield func(enc blob, err error) bool) {
 		buffer := core.NewPooledBuffer()
-		defer buffer.Close()
+		defer func() {
+			if err := buffer.Close(); err != nil {
+				fmt.Printf("[OSM2ADDR][ERROR] close: %v", err)
+			}
+		}()
 		for {
 			select {
 			case <-ctx.Done():
@@ -142,7 +146,11 @@ func extract(header *protobuf.BlobHeader, blob *protobuf.Blob) ([]model.Object, 
 
 	case blob.ZlibData != nil:
 		zlibBuf := core.NewPooledBuffer()
-		defer zlibBuf.Close()
+		defer func() {
+			if err := zlibBuf.Close(); err != nil {
+				fmt.Printf("[OSM2ADDR][ERROR] close :%v", err)
+			}
+		}()
 		r, err := zlib.NewReader(bytes.NewReader(blob.GetZlibData()))
 		if err != nil {
 			return nil, err

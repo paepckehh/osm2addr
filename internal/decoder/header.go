@@ -25,7 +25,11 @@ import (
 
 func LoadHeader(reader io.Reader) (model.Header, error) {
 	buf := core.NewPooledBuffer()
-	defer buf.Close()
+	defer func() {
+		if err := buf.Close(); err != nil {
+			fmt.Printf("[OSM2ADDR][ERROR] close: %v", err)
+		}
+	}()
 
 	h, err := readBlobHeader(buf, reader)
 	if err != nil {

@@ -35,7 +35,9 @@ func main() {
 			log.Printf("[OSM2ADDR][ERROR][FATAL] Unable to read: %v", os.Args[2])
 			log.Fatal("[OSM2ADDR][ERROR][FATAL] Target File, if specified, must be a readable file (example: osm2addr DE ../../data/germany-latest.osm.pbf)")
 		}
-		t.Close()
+		if err := t.Close(); err != nil {
+			log.Printf("[OSM2ADDR][ERROR][FATAL] Unable to cloe: %v: %v", os.Args[2], err)
+		}
 		target.FileName = os.Args[2]
 	}
 
@@ -50,7 +52,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer target.File.Close()
+	defer func() {
+		if err := target.File.Close(); err != nil {
+			fmt.Printf("[OSM2ADDR][ERROR] during file close: %s", err)
+		}
+	}()
 
 	// parse file
 	if err := osm2addr.Parse(target); err != nil {
