@@ -1,6 +1,7 @@
 package osm2addr
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -9,11 +10,11 @@ import (
 func (t *tagSet) uniformDE() int {
 	count := 0
 	if !isLatin1(string(t.City)) {
-		// fmt.Printf("[City][Latin1][%v]%v", t.Country, t.City)
+		fmt.Printf("\n[City][Latin1][%v]%v", t.Country, t.City)
 		return 1
 	}
 	if t.Street != "" && !isLatin1(string(t.Street)) {
-		// fmt.Printf("[Street][Latin1][%v]%v", t.Country, t.Street)
+		fmt.Printf("\n[Street][Latin1][%v]%v", t.Country, t.Street)
 		return 1
 	}
 	p, err := strconv.Atoi(string(t.Postcode))
