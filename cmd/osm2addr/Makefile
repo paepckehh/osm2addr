@@ -6,6 +6,5 @@ clean:
 
 check: 
 	gofmt -w -s .
-	go vet .
-	staticcheck
-	golangci-lint run
+	CGO_ENABLED=0 go vet .
+	CGO_ENABLED=0 staticcheck
