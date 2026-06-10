@@ -8,7 +8,7 @@ import (
 )
 
 // writeJsonFile ...
-func writeJsonFile(countrycode, filename string, in interface{}) {
+func writeJsonFile(countrycode, filename string, in any) {
 	folder := filepath.Join("json", countrycode)
 	_ = os.MkdirAll(folder, 0755)
 	j, err := json.MarshalIndent(&in, "", "\t")

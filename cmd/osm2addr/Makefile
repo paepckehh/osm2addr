@@ -6,5 +6,6 @@ clean:
 
 check: 
 	gofmt -w -s .
-	CGO_ENABLED=0 go vet .
+	go vet ./...
+	go fix ./...
 	CGO_ENABLED=0 staticcheck
