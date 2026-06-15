@@ -5,14 +5,6 @@ import (
 	"sync"
 )
 
-// Schema ...
-type placeID [12]byte
-type placeIdHex string //`json:"placeid"`
-type country string    //`json:"country"`
-type postcode string   //`json:"postcode"`
-type city string       //`json:"city"`
-type street string     //`json:"street"`
-
 // Target ...
 type Target struct {
 	Worker   int
@@ -36,6 +28,14 @@ type tagSet struct {
 	City     city     `json:"city"`
 	Street   street   `json:"street"`
 }
+
+// Schema ...
+type placeID [12]byte
+type placeIdHex string //`json:"placeid"`
+type country string    //`json:"country"`
+type postcode string   //`json:"postcode"`
+type city string       //`json:"city"`
+type street string     //`json:"street"`
 
 // global channel and mutex
 var preload, parser, collector sync.WaitGroup

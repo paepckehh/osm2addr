@@ -19,6 +19,7 @@ func collect(target *Target) {
 	corrected, correctedCounter := make(map[string]int), 0
 	placeIDs := make(map[placeID]tagSet)
 	places := make(map[postcode]map[city]map[street]placeIdHex)
+	places2 := make(map[postcode]map[city]map[street]bool)
 
 	// range over targets channel
 	for t := range targets {
@@ -28,13 +29,17 @@ func collect(target *Target) {
 		}
 		if _, ok = places[t.Postcode]; !ok {
 			places[t.Postcode] = make(map[city]map[street]placeIdHex)
+			places2[t.Postcode] = make(map[city]map[street]bool)
 			places[t.Postcode][t.City] = make(map[street]placeIdHex)
+			places2[t.Postcode][t.City] = make(map[street]bool)
 			switch t.Street {
 			case "":
 				continue
 			default:
 				places[t.Postcode][t.City] = make(map[street]placeIdHex)
+				places2[t.Postcode][t.City] = make(map[street]bool)
 				places[t.Postcode][t.City][t.Street] = pid.hex()
+				places2[t.Postcode][t.City][t.Street] = true
 				placeIDs[pid] = *t
 				e := fmt.Sprintf("[WARNING][NON-PRELOADED-POSTCODE-CITY-ADDED][POSTCODE:%v][CITY:%v]", t.Postcode, t.City)
 				if _, ok = warning[e]; !ok {
@@ -65,6 +70,7 @@ func collect(target *Target) {
 				}
 			}
 			places[t.Postcode][t.City] = make(map[street]placeIdHex)
+			places2[t.Postcode][t.City] = make(map[street]bool)
 			for ci := range places[t.Postcode] {
 				if string(ci) == string(t.City) {
 					continue
@@ -86,6 +92,7 @@ func collect(target *Target) {
 		default:
 			if _, ok = places[t.Postcode][t.City][t.Street]; !ok {
 				places[t.Postcode][t.City][t.Street] = pid.hex()
+				places2[t.Postcode][t.City][t.Street] = true
 				placeIDs[pid] = *t
 			}
 		}
@@ -102,8 +109,9 @@ func collect(target *Target) {
 		p[string(pid.hex())] = tset
 
 	}
-	writeJsonFile(target.Country, "placeID2addr.json", p)
+	writeJsonFile(target.Country, "addr.json", places2)
 	writeJsonFile(target.Country, "addr2placeID.json", places)
+	writeJsonFile(target.Country, "placeID2addr.json", p)
 	writeJsonFile(target.Country, "warning.json", warning)
 	writeJsonFile(target.Country, "corrected.json", corrected)
 	collector.Done()

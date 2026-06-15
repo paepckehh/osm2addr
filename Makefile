@@ -1,4 +1,6 @@
 PROJECT=$(shell basename $(CURDIR))
+# CURL=curl --follow 
+CURL=aria2c
 
 all:
 	make -C cmd/$(PROJECT) all
@@ -23,12 +25,12 @@ check:
 ##########################
 
 update-de: 
-	mkdir -p data && curl --output data/germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
-	mkdir -p data/validated && curl --output data/validated-preload/DE.csv https://downloads.suche-postleitzahl.org/v2/public/zuordnung_plz_ort.csv 
+	mkdir -p data && $(CURL) -o data/germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
+	# mkdir -p data/validated && $(CURL) -o data/validated-preload/DE.csv https://downloads.suche-postleitzahl.org/v2/public/zuordnung_plz_ort.csv 
 
 update-dach:
-	mkdir -p data && curl --output data/dach-latest.osm.pbf https://download.geofabrik.de/europe/dach-latest.osm.pbf
+	mkdir -p data && $(CURL) -o data/dach-latest.osm.pbf https://download.geofabrik.de/europe/dach-latest.osm.pbf
 
 update-eu: 
-	mkdir -p data && curl --output data/europe-latest.osm.pbf https://download.geofabrik.de/europe-latest.osm.pbf
+	mkdir -p data && $(CURL) -o data/europe-latest.osm.pbf https://download.geofabrik.de/europe-latest.osm.pbf
 
