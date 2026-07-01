@@ -5,7 +5,7 @@ go 1.26.3
 require (
 	github.com/agnivade/levenshtein v1.2.1
 	github.com/destel/rill v0.8.1
-	github.com/klauspost/compress v1.18.7
+	github.com/klauspost/compress v1.19.0
 	golang.org/x/text v0.38.0
 	google.golang.org/protobuf v1.36.11
 )
