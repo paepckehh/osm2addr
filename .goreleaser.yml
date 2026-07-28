@@ -5,6 +5,10 @@ builds:
     main: ./cmd/osm2addr/main.go
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X paepcke.de/osm2addr/cmd/osm2addr.version={{.Version}}
+      - -X paepcke.de/osm2addr/cmd/osm2addr.commit={{.ShortCommit}}
+      - -X paepcke.de/osm2addr/cmd/osm2addr.buildtime={{.Date}}
     goos:
       - linux
       - freebsd

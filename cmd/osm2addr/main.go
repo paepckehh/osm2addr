@@ -42,6 +42,7 @@ func main() {
 	}
 
 	// report
+	fmt.Printf("\nOSM:Version              # %s", versionLine())
 	fmt.Printf("\nOSM:Startup               # %v", ts)
 	fmt.Printf("\nOSM:TargetCountry         # %v", target.Country)
 	fmt.Printf("\nOSM:WorkerScale           # %v", target.Worker)
