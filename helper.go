@@ -3,6 +3,7 @@ package osm2addr
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -31,11 +32,7 @@ func isLatin1(s string) bool {
 	if isASCII(s) {
 		return true
 	}
-	var c = map[rune]rune{}
-	for _, runeValue := range s {
-		c[runeValue] = runeValue
-	}
-	for _, r := range c {
+	for _, r := range s {
 		if r > unicode.MaxLatin1 {
 			return false
 		}
@@ -56,14 +53,7 @@ func isASCII(s string) bool {
 // hu print large number readable for humans and fixed lenght
 func hu(in int) string {
 	p := message.NewPrinter(language.German)
-	h := p.Sprintf("%d", in)
-	for {
-		if len(h) < 11 {
-			h = " " + h
-			continue
-		}
-		return h
-	}
+	return fmt.Sprintf("%11s", p.Sprintf("%d", in))
 }
 
 // makeCapitalLetter ....

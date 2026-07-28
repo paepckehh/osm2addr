@@ -112,12 +112,15 @@ func tryNormCityDEShortcut(s string) string {
 
 // camelCaseCityDE...
 func camelCaseCityDE(s string) string {
-	var out string
 	lower := strings.ToLower(s)
 	parts := strings.Split(lower, " ")
+	var b strings.Builder
 	for n, p := range parts {
+		if n > 0 {
+			b.WriteByte(' ')
+		}
 		if n == 0 {
-			out = camelCaseSeps(makeCapitalLetter(p))
+			b.WriteString(camelCaseSeps(makeCapitalLetter(p)))
 			continue
 		}
 		switch len(p) {
@@ -138,7 +141,6 @@ func camelCaseCityDE(s string) string {
 			case "in":
 			case "im":
 			case "kalten":
-				p = "kalten"
 			case "unter":
 			case "ob":
 			case "ot":
@@ -156,7 +158,7 @@ func camelCaseCityDE(s string) string {
 				p = camelCaseSeps(makeCapitalLetter(p))
 			}
 		}
-		out = out + " " + p
+		b.WriteString(p)
 	}
-	return out
+	return b.String()
 }

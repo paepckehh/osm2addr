@@ -27,69 +27,70 @@ func collect(target *Target) {
 		if _, ok = placeIDs[pid]; ok {
 			continue
 		}
+
+		// new postcode: init maps and seed city
 		if _, ok = places[t.Postcode]; !ok {
 			places[t.Postcode] = make(map[city]map[street]placeIdHex)
 			places2[t.Postcode] = make(map[city]map[street]bool)
 			places[t.Postcode][t.City] = make(map[street]placeIdHex)
 			places2[t.Postcode][t.City] = make(map[street]bool)
-			switch t.Street {
-			case "":
-				continue
-			default:
-				places[t.Postcode][t.City] = make(map[street]placeIdHex)
-				places2[t.Postcode][t.City] = make(map[street]bool)
+			if t.Street != "" {
 				places[t.Postcode][t.City][t.Street] = pid.hex()
 				places2[t.Postcode][t.City][t.Street] = true
 				placeIDs[pid] = *t
+			}
+			if !t.Preloaded {
 				e := fmt.Sprintf("[WARNING][NON-PRELOADED-POSTCODE-CITY-ADDED][POSTCODE:%v][CITY:%v]", t.Postcode, t.City)
-				if _, ok = warning[e]; !ok {
-					warning[e] = 0
-				}
 				warning[e]++
 				warningCounter++
-				continue
 			}
+			continue
 		}
+
+		// existing postcode, new city: try separator-based correction
 		if _, ok = places[t.Postcode][t.City]; !ok {
+			correctedCity := false
+		outer:
 			for _, sep := range seps {
 				if strings.Contains(string(t.City), sep) {
 					c := strings.Split(string(t.City), sep)
 					for ci := range places[t.Postcode] {
 						if c[0] == string(ci) {
 							e := fmt.Sprintf("[CORRECTED][CITY][SEP:%v]#%v#%v#", sep, t.City, ci)
-							if _, ok = corrected[e]; !ok {
-								corrected[e] = 0
-							}
 							corrected[e]++
 							correctedCounter++
 							t.City = ci
 							pid = id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
-							break
+							correctedCity = true
+							break outer
 						}
 					}
 				}
 			}
-			places[t.Postcode][t.City] = make(map[street]placeIdHex)
-			places2[t.Postcode][t.City] = make(map[street]bool)
-			for ci := range places[t.Postcode] {
-				if string(ci) == string(t.City) {
-					continue
-				}
-				distance := levenshtein.ComputeDistance(string(ci), string(t.City))
-				if distance < 2 {
-					e := fmt.Sprintf("[WARNING][LEVENSHTEIN:%v][POSTCODE:%v][CITY]#%v#%v#", distance, t.Postcode, ci, t.City)
-					if _, ok = warning[e]; !ok {
-						warning[e] = 0
+			if !correctedCity {
+				places[t.Postcode][t.City] = make(map[street]placeIdHex)
+				places2[t.Postcode][t.City] = make(map[street]bool)
+				for ci := range places[t.Postcode] {
+					if string(ci) == string(t.City) {
+						continue
 					}
-					warning[e]++
-					warningCounter++
+					distance := levenshtein.ComputeDistance(string(ci), string(t.City))
+					if distance < 2 {
+						e := fmt.Sprintf("[WARNING][LEVENSHTEIN:%v][POSTCODE:%v][CITY]#%v#%v#", distance, t.Postcode, ci, t.City)
+						warning[e]++
+						warningCounter++
+					}
 				}
 			}
-
 		}
-		switch t.Street {
-		case "":
-		default:
+
+		// re-check dedup after city correction may have changed pid
+		if _, ok = placeIDs[pid]; ok {
+			continue
+		}
+
+		// add street
+		if t.Street != "" {
 			if _, ok = places[t.Postcode][t.City][t.Street]; !ok {
 				places[t.Postcode][t.City][t.Street] = pid.hex()
 				places2[t.Postcode][t.City][t.Street] = true

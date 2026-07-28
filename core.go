@@ -23,10 +23,11 @@ type Target struct {
 
 // tagSet ...
 type tagSet struct {
-	Country  country  `json:"country"`
-	Postcode postcode `json:"postcode"`
-	City     city     `json:"city"`
-	Street   street   `json:"street"`
+	Country   country  `json:"country"`
+	Postcode  postcode `json:"postcode"`
+	City      city     `json:"city"`
+	Street    street   `json:"street"`
+	Preloaded bool     `json:"-"`
 }
 
 // Schema ...

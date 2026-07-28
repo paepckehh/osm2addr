@@ -62,7 +62,7 @@ func pbfparser(target *Target) {
 					t := tagSet{} // init new tag set
 					for tag, content := range o.Tags {
 						tagCounter++
-						if len(tag) > 8 && tag[:5] == "addr:" {
+						if len(tag) >= 6 && tag[:5] == "addr:" {
 							addrTag := strings.Split(tag, ":")
 							if len(addrTag) > 1 {
 								switch addrTag[1] {
@@ -107,16 +107,17 @@ func pbfparser(target *Target) {
 						}
 					}
 
-					if t.Country != "" {
-						if !countries[country(t.Country)] {
-							countries[country(t.Country)] = true
-						}
-						if t.Postcode != "" && t.City != "" && t.Street != "" {
-							addrComplete++
-							if t.Country == country(target.Country) {
-								uniformErr += t.uniform()
-								targets <- &t
-							}
+					if t.Country == "" {
+						t.Country = country(target.Country)
+					}
+					if !countries[country(t.Country)] {
+						countries[country(t.Country)] = true
+					}
+					if t.Postcode != "" && t.City != "" && t.Street != "" {
+						addrComplete++
+						if t.Country == country(target.Country) {
+							uniformErr += t.uniform()
+							targets <- &t
 						}
 					}
 				}

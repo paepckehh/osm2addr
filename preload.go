@@ -10,6 +10,7 @@ import (
 
 // preloadFeed ...
 func (target *Target) preloadFeed() {
+	defer preload.Done()
 	if target.checkPreloadFile() {
 
 		// init
@@ -60,9 +61,10 @@ func (target *Target) preloadFeed() {
 				continue
 			}
 			t := &tagSet{
-				Postcode: postcode(row[target.PreLoad.Postcode]),
-				City:     city(row[target.PreLoad.City]),
-				Country:  country(target.Country),
+				Postcode:  postcode(row[target.PreLoad.Postcode]),
+				City:      city(row[target.PreLoad.City]),
+				Country:   country(target.Country),
+				Preloaded: true,
 			}
 			uniformCounter += t.uniform()
 			targets <- t
@@ -72,7 +74,6 @@ func (target *Target) preloadFeed() {
 		fmt.Printf("\nOSM:PreLoadFile:Fail      # %v", failCounter)
 		fmt.Printf("\nOSM:PreLoadFile:Total     # %v", counter)
 		writeJsonFile(target.Country, "error.preload.json", fail)
-		preload.Done()
 	}
 }
 
