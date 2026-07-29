@@ -49,6 +49,7 @@ func (target *Target) preloadFeed() {
 				}
 				fail[e]++
 				failCounter++
+				dbg("Drop:[Preload][City][Length]%v %v", row[target.PreLoad.Postcode], row[target.PreLoad.City])
 				continue
 			}
 			if len(row[target.PreLoad.Postcode]) != target.PreLoad.PostcodeLenght {
@@ -58,6 +59,7 @@ func (target *Target) preloadFeed() {
 				}
 				fail[e]++
 				failCounter++
+				dbg("Drop:[Preload][Postcode][Length]%v %v", row[target.PreLoad.Postcode], row[target.PreLoad.City])
 				continue
 			}
 			t := &tagSet{
@@ -68,6 +70,7 @@ func (target *Target) preloadFeed() {
 			}
 			uniformCounter += t.uniform()
 			targets <- t
+			dbg("Add:[Preload][%v]%v %v", t.Country, t.Postcode, t.City)
 			counter++
 
 		}

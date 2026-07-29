@@ -20,6 +20,7 @@ func main() {
 	// init
 	ts := time.Now()
 	var err error
+	osm2addr.InitDebug()
 
 	// setup defaults
 	target := &osm2addr.Target{
@@ -52,6 +53,7 @@ func main() {
 	fmt.Printf("\nOSM:Startup               # %v", ts)
 	fmt.Printf("\nOSM:TargetCountry         # %v", target.Country)
 	fmt.Printf("\nOSM:WorkerScale           # %v", target.Worker)
+	fmt.Printf("\nOSM:Debug                 # %v", osm2addr.DebugEnabled())
 	fmt.Printf("\nOSM:File                  # %v", target.FileName)
 
 	// open file

@@ -10,16 +10,18 @@ import (
 func (t *tagSet) uniformDE() int {
 	count := 0
 	if !isLatin1(string(t.City)) {
+		dbg("Drop:[NonLatin1][City][%v]%v", t.Country, t.City)
 		fmt.Printf("\n[City][Latin1][%v]%v", t.Country, t.City)
 		return 1
 	}
 	if t.Street != "" && !isLatin1(string(t.Street)) {
+		dbg("Drop:[NonLatin1][Street][%v]%v", t.Country, t.Street)
 		fmt.Printf("\n[Street][Latin1][%v]%v", t.Country, t.Street)
 		return 1
 	}
 	p, err := strconv.Atoi(string(t.Postcode))
 	if err != nil {
-		// fmt.Printf("[Postcode][%v]%v", t.Country, t.Postcode)
+		dbg("Drop:[Postcode][Parse][%v]%v", t.Country, t.Postcode)
 		return 1
 	}
 	pc := strconv.Itoa(p)
@@ -27,9 +29,10 @@ func (t *tagSet) uniformDE() int {
 	case 5:
 		t.Postcode = postcode(pc)
 	case 4:
+		dbg("Norm:[Postcode][Pad][%v]%v =====> %v", t.Country, t.Postcode, "0"+pc)
 		t.Postcode = postcode("0" + pc)
 	default:
-		// fmt.Printf("[Postcode][%v]%v", t.Country, t.Postcode)
+		dbg("Drop:[Postcode][Length][%v]%v", t.Country, t.Postcode)
 		return 1
 	}
 	var ok bool
@@ -54,7 +57,7 @@ func tryNormStreetDE(in street) (street, bool) {
 	s = strings.ReplaceAll(s, "str.", " straße")
 	s = strings.ReplaceAll(s, "strasse", "straße")
 	if street(s) != in {
-		// fmt.Printf("\n[UNIFORM][CITY][DE] IN-City:%v ======> OUT-City:%v", in, s)
+		dbg("Norm:[Street][DE]%v =====> %v", in, s)
 		return street(s), false
 	}
 	return street(s), true
@@ -69,7 +72,7 @@ func tryNormCityDE(in city) (city, bool) {
 	s = camelCaseCityDE(s)
 	s = tryNormCityDETypo(s)
 	if s != string(in) {
-		// fmt.Printf("\n[UNIFORM][CITY][DE] IN-City:%v ======> OUT-City:%v", in, s)
+		dbg("Norm:[City][DE]%v =====> %v", in, s)
 		return city(s), false
 	}
 	return city(s), true

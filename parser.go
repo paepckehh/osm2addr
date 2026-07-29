@@ -70,10 +70,12 @@ func pbfparser(target *Target) {
 									countryCounter++
 									if len(content) != 2 {
 										countryErr++
+										dbg("Drop:[Country][Length]%v", content)
 										continue
 									}
 									if content != strings.ToUpper(content) {
 										countryErr++
+										dbg("Drop:[Country][Case]%v", content)
 										continue
 									}
 									t.Country = country(content)
@@ -82,6 +84,7 @@ func pbfparser(target *Target) {
 									l := len(content)
 									if l < 3 || l > 256 {
 										streetErr++
+										dbg("Drop:[Street][Length]%v", content)
 										continue
 									}
 									t.Street = street(content)
@@ -90,6 +93,7 @@ func pbfparser(target *Target) {
 									l := len(content)
 									if l < 2 || l > 256 {
 										cityErr++
+										dbg("Drop:[City][Length]%v", content)
 										continue
 									}
 									t.City = city(content)
@@ -98,6 +102,7 @@ func pbfparser(target *Target) {
 									l := len(content)
 									if l < 3 || l > 256 {
 										postcodeErr++
+										dbg("Drop:[Postcode][Length]%v", content)
 										continue
 									}
 									t.Postcode = postcode(content)
@@ -108,6 +113,7 @@ func pbfparser(target *Target) {
 					}
 
 					if t.Country == "" {
+						dbg("Norm:[Country][Default]%v =====> %v", t.Country, target.Country)
 						t.Country = country(target.Country)
 					}
 					if !countries[country(t.Country)] {
@@ -118,7 +124,11 @@ func pbfparser(target *Target) {
 						if t.Country == country(target.Country) {
 							uniformErr += t.uniform()
 							targets <- &t
+						} else {
+							dbg("Drop:[Country][Mismatch]%v != %v", t.Country, target.Country)
 						}
+					} else {
+						dbg("Drop:[Incomplete][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 					}
 				}
 			case *model.Way:

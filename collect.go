@@ -22,6 +22,7 @@ func collect(target *Target) {
 	for t := range targets {
 		pid := id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
 		if _, ok = placeIDs[pid]; ok {
+			dbg("Drop:[Dedup][PlaceID][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 			continue
 		}
 
@@ -35,6 +36,7 @@ func collect(target *Target) {
 				places[t.Postcode][t.City][t.Street] = pid.hex()
 				places2[t.Postcode][t.City][t.Street] = true
 				placeIDs[pid] = *t
+				dbg("Add:[Place][NewPostcode][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 			}
 			if !t.Preloaded {
 				e := fmt.Sprintf("[WARNING][NON-PRELOADED-POSTCODE-CITY-ADDED][POSTCODE:%v][CITY:%v]", t.Postcode, t.City)
@@ -60,6 +62,7 @@ func collect(target *Target) {
 					e := fmt.Sprintf("[CORRECTED][CITY][SEP]#%v#%v#", t.City, ci)
 					corrected[e]++
 					correctedCounter++
+					dbg("Norm:[City][Sep]#%v# =====> #%v#", t.City, ci)
 					t.City = ci
 					pid = id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
 					correctedCity = true
@@ -78,6 +81,7 @@ func collect(target *Target) {
 						e := fmt.Sprintf("[WARNING][LEVENSHTEIN:%v][POSTCODE:%v][CITY]#%v#%v#", distance, t.Postcode, ci, t.City)
 						warning[e]++
 						warningCounter++
+						dbg("Warn:[Levenshtein:%v][Postcode:%v][City]#%v#%v#", distance, t.Postcode, ci, t.City)
 					}
 				}
 			}
@@ -85,6 +89,7 @@ func collect(target *Target) {
 
 		// re-check dedup after city correction may have changed pid
 		if _, ok = placeIDs[pid]; ok {
+			dbg("Drop:[Dedup][PostCorrect][PlaceID][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 			continue
 		}
 
@@ -94,6 +99,7 @@ func collect(target *Target) {
 				places[t.Postcode][t.City][t.Street] = pid.hex()
 				places2[t.Postcode][t.City][t.Street] = true
 				placeIDs[pid] = *t
+				dbg("Add:[Place][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 			}
 		}
 	}
