@@ -1,3 +1,4 @@
+/osm2addr
 *.pbf
 data/*.pbf
 cmd/osm2addr/osm2addr

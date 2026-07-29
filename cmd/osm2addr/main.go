@@ -9,6 +9,12 @@ import (
 	"paepcke.de/osm2addr"
 )
 
+var (
+	version   = "dev"
+	commit    = "none"
+	buildtime = "unknown"
+)
+
 func main() {
 
 	// init
@@ -42,7 +48,7 @@ func main() {
 	}
 
 	// report
-	fmt.Printf("\nOSM:Version              # %s", versionLine())
+	fmt.Printf("\nOSM:Version              # osm2addr %s (commit %s, built %s)", version, commit, buildtime)
 	fmt.Printf("\nOSM:Startup               # %v", ts)
 	fmt.Printf("\nOSM:TargetCountry         # %v", target.Country)
 	fmt.Printf("\nOSM:WorkerScale           # %v", target.Worker)
