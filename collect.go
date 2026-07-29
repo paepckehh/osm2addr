@@ -7,9 +7,6 @@ import (
 	"github.com/agnivade/levenshtein"
 )
 
-// global
-var seps = [...]string{" ", "-"}
-
 // collect ...
 func collect(target *Target) {
 
@@ -47,24 +44,26 @@ func collect(target *Target) {
 			continue
 		}
 
-		// existing postcode, new city: try separator-based correction
+		// existing postcode, new city: merge only when the incoming city
+		// differs from an existing one solely by separator choice (' ' vs '-'),
+		// e.g. "Bad Homburg" vs "Bad-Homburg". A multi-token city must never be
+		// collapsed into an unrelated single-token prefix ("Berlin Mitte" must
+		// not merge into "Berlin"), otherwise its streets are silently lost.
 		if _, ok = places[t.Postcode][t.City]; !ok {
 			correctedCity := false
-		outer:
-			for _, sep := range seps {
-				if strings.Contains(string(t.City), sep) {
-					c := strings.Split(string(t.City), sep)
-					for ci := range places[t.Postcode] {
-						if c[0] == string(ci) {
-							e := fmt.Sprintf("[CORRECTED][CITY][SEP:%v]#%v#%v#", sep, t.City, ci)
-							corrected[e]++
-							correctedCounter++
-							t.City = ci
-							pid = id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
-							correctedCity = true
-							break outer
-						}
-					}
+			inNorm := strings.ReplaceAll(string(t.City), "-", " ")
+			for ci := range places[t.Postcode] {
+				if string(ci) == string(t.City) {
+					continue
+				}
+				if inNorm == strings.ReplaceAll(string(ci), "-", " ") {
+					e := fmt.Sprintf("[CORRECTED][CITY][SEP]#%v#%v#", t.City, ci)
+					corrected[e]++
+					correctedCounter++
+					t.City = ci
+					pid = id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
+					correctedCity = true
+					break
 				}
 			}
 			if !correctedCity {
