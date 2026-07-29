@@ -26,7 +26,7 @@ func main() {
 	target := &osm2addr.Target{
 		Worker:   1, // runtime.NumCPU()
 		Country:  "DE",
-		FileName: "../../data/germany-latest.osm.pbf",
+		FileName: "data/germany-latest.osm.pbf",
 	}
 
 	// parse commandline options

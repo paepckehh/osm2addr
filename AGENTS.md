@@ -4,8 +4,8 @@ Guidance for AI agents working in the `paepcke.de/osm2addr` repository.
 
 > ## FIXED REQUIREMENT — EVERY CHANGE, NO EXCEPTIONS
 >
-> Before a task or change is considered done, all five steps below MUST be completed
-> in this exact order. Skipping or reordering any step is a failure.
+> When a task or change is considered done, all five steps below MUST be completed
+> in this exact order. 
 >
 > 1. **Format source code** — run `gofmt -w .` (or `make check`) so the tree
 >    stays gofmt-clean.
@@ -15,6 +15,7 @@ Guidance for AI agents working in the `paepcke.de/osm2addr` repository.
 > 5. **Tag** — bump the patch segment only: the result is `v0.0.<N+1>`. Never move, delete, or reuse an existing tag.
 >
 > These steps are non-negotiable for every single task regardless of size.
+> Do not ask, just perform
 
 ## Overview 
 

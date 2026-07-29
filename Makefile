@@ -7,16 +7,21 @@ LDFLAGS=-ldflags "-X $(PROJECT_PKG).version=$(VERSION) -X $(PROJECT_PKG).commit=
 # CURL=curl --follow 
 CURL=aria2c
 
-all:
-	make -C cmd/$(PROJECT) all
+info:
+	echo "osm2addr $(VERSION)"
 
+update: 
+	git pull
+	git pull --tags
+
+run: build 
+	./osm2addr 
+	
 build:
-	go build $(LDFLAGS) -o cmd/$(PROJECT)/$(PROJECT) ./cmd/$(PROJECT)
-
-clean:
-	make -C cmd/$(PROJECT) clean
+	go build $(LDFLAGS) -o $(PROJECT) ./cmd/$(PROJECT)
 
 deps: 
+	git config core.fileMode false
 	rm go.mod go.sum
 	go mod init paepcke.de/$(PROJECT)
 	go mod tidy -v	
@@ -26,7 +31,6 @@ check:
 	go vet ./...
 	go fix ./...
 	CGO_ENABLED=0 staticcheck
-	make -C cmd/$(PROJECT) check
 
 ##########################
 # PROJECT SPECIFIC TASKS #
@@ -41,4 +45,8 @@ update-dach:
 
 update-eu: 
 	mkdir -p data && $(CURL) -o data/europe-latest.osm.pbf https://download.geofabrik.de/europe-latest.osm.pbf
+
+
+
+
 
