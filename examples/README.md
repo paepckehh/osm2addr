@@ -7,13 +7,17 @@ curl --output data/germany-latest.osm.pbf https://download.geofabrik.de/europe/g
 curl --output data/validated-preload/DE.csv https://downloads.suche-postleitzahl.org/v2/public/zuordnung_plz_ort.csv 
 go run paepcke.de/osm2addr/cmd/osm2addr@latest DE data/germany-latest.osm.pbf
 
+OSM:Version              # osm2addr dev (commit none, built unknown)
 OSM:Startup               # 2025-03-10 07:44:58.79476069 +0000 UTC m=+0.000533658
 OSM:TargetCountry         # DE
 OSM:WorkerScale           # 1
+OSM:Debug                 # false
 OSM:File                  # data/germany-latest.osm.pbf
 ----------------------------------------------------------------------------------
 OSM:PreLoadFile           # data/validated-preload/DE.csv
-OSM:PreLoadFile:Done      # 12853
+OSM:PreLoadFile:Fail      # 1
+OSM:PreLoadFile:Total     # 12853
+OSM:Writer:JSON           # json/DE/error.preload.json
 ----------------------------------------------------------------------------------
 OSM:PBF:File:URL          # https://download.geofabrik.de/europe/germany-updates
 OSM:PBF:File:Repl:USM     # 4330
@@ -36,9 +40,14 @@ OSM:PBF:Err:Street        #         162
 ----------------------------------------------------------------------------------
 OSM:Corrected:Auto:Cases  #          81
 OSM:Corrected:Auto:Total  #      21.132
+OSM:Corrected:Warn:Cases  #           8
+OSM:Corrected:Warn:Total  #           8
 OSM:Collect:Places:Total  #     278.379
 ----------------------------------------------------------------------------------
-OSM:Writer:JSON           # json/DE/id.json
+OSM:Writer:JSON           # json/DE/addr.json
+OSM:Writer:JSON           # json/DE/addr2placeID.json
+OSM:Writer:JSON           # json/DE/placeID2addr.json
+OSM:Writer:JSON           # json/DE/warning.json
 OSM:Writer:JSON           # json/DE/corrected.json
 OSM:Time:Total            # 45.257262208s
 

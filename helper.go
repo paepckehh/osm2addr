@@ -94,15 +94,3 @@ func camelCaseSep(in, sep string) string {
 	}
 	return in
 }
-
-// phoneticCollision ...
-//func phoneticCollision(in1, in2 string) bool {
-//	if !containsSEP(in1) && !containsSEP(in2) && !strings.Contains(in1, "titz") {
-//		e1 := cologne.NewEncoder()
-//		e2 := cologne.NewEncoder()
-//		if e1.Encode(in1) == e2.Encode(in2) {
-//			return true
-//		}
-//	}
-//	return false
-//}

@@ -14,7 +14,7 @@ func (target *Target) preloadFeed() {
 	if target.checkPreloadFile() {
 
 		// init
-		fail, failCounter, counter, uniformCounter, ok := make(map[string]int), 0, 0, 0, false
+		fail, failCounter, counter := make(map[string]int), 0, 0
 		defer func() {
 			if err := target.PreLoad.File.Close(); err != nil {
 				fmt.Printf("[OSM2ADDR][ERROR] unable to close file: %s", err)
@@ -44,9 +44,6 @@ func (target *Target) preloadFeed() {
 			}
 			if len(row[target.PreLoad.City]) < 2 {
 				e := fmt.Sprintf("[ERROR][PRE][CITY][LENGHT]#%v#%v#", row[target.PreLoad.Postcode], row[target.PreLoad.City])
-				if _, ok = fail[e]; !ok {
-					fail[e] = 0
-				}
 				fail[e]++
 				failCounter++
 				dbg("Drop:[Preload][City][Length]%v %v", row[target.PreLoad.Postcode], row[target.PreLoad.City])
@@ -54,9 +51,6 @@ func (target *Target) preloadFeed() {
 			}
 			if len(row[target.PreLoad.Postcode]) != target.PreLoad.PostcodeLenght {
 				e := fmt.Sprintf("[ERROR][PRE][POSTCODE][LENGHT]#%v#%v#", row[target.PreLoad.Postcode], row[target.PreLoad.City])
-				if _, ok = fail[e]; !ok {
-					fail[e] = 0
-				}
 				fail[e]++
 				failCounter++
 				dbg("Drop:[Preload][Postcode][Length]%v %v", row[target.PreLoad.Postcode], row[target.PreLoad.City])
@@ -68,7 +62,7 @@ func (target *Target) preloadFeed() {
 				Country:   country(target.Country),
 				Preloaded: true,
 			}
-			uniformCounter += t.uniform()
+			_ = t.uniform()
 			targets <- t
 			dbg("Add:[Preload][%v]%v %v", t.Country, t.Postcode, t.City)
 			counter++

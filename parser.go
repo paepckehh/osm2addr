@@ -2,7 +2,9 @@ package osm2addr
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"paepcke.de/osm2addr/internal/model"
@@ -33,7 +35,7 @@ func pbfparser(target *Target) {
 	for {
 		objs, err := d.Decode()
 		if err != nil {
-			if err.Error() != "EOF" {
+			if !errors.Is(err, io.EOF) {
 				panic(err)
 			}
 			fmt.Printf("\n----------------------------------------------------------------------------------")

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"paepcke.de/osm2addr"
@@ -34,7 +35,7 @@ func main() {
 		if len(os.Args[1]) != 2 {
 			log.Fatal("[OSM2ADDR][ERROR][FATAL] Target Country Code, if specified, must be two digits (example: osm2addr DE)")
 		}
-		target.Country = os.Args[1]
+		target.Country = strings.ToUpper(os.Args[1])
 	}
 	if len(os.Args) > 2 {
 		t, err := os.Open(os.Args[2])
@@ -43,7 +44,7 @@ func main() {
 			log.Fatal("[OSM2ADDR][ERROR][FATAL] Target File, if specified, must be a readable file (example: osm2addr DE ../../data/germany-latest.osm.pbf)")
 		}
 		if err := t.Close(); err != nil {
-			log.Printf("[OSM2ADDR][ERROR][FATAL] Unable to cloe: %v: %v", os.Args[2], err)
+			log.Printf("[OSM2ADDR][ERROR][FATAL] Unable to close: %v: %v", os.Args[2], err)
 		}
 		target.FileName = os.Args[2]
 	}

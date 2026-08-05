@@ -66,6 +66,6 @@ func (d *Decoder) Decode() ([]model.Object, error) {
 
 // Close will cancel the background decoding pipeline.
 func (d *Decoder) Close() {
-	rill.DrainNB(d.Objects)
+	rill.Discard(d.Objects)
 	d.cancel()
 }
