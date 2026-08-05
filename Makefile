@@ -45,8 +45,3 @@ update-dach:
 
 update-eu: 
 	mkdir -p data && $(CURL) -o data/europe-latest.osm.pbf https://download.geofabrik.de/europe-latest.osm.pbf
-
-
-
-
-
