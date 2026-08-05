@@ -24,6 +24,10 @@ func (t *tagSet) uniformDE() int {
 		dbg("Drop:[Postcode][Parse][%v]%v", t.Country, t.Postcode)
 		return 1
 	}
+	if p < 0 || p > 99999 {
+		dbg("Drop:[Postcode][Range][%v]%v", t.Country, t.Postcode)
+		return 1
+	}
 	pc := strconv.Itoa(p)
 	switch len(pc) {
 	case 5:
