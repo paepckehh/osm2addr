@@ -62,7 +62,9 @@ func (target *Target) preloadFeed() {
 				Country:   country(target.Country),
 				Preloaded: true,
 			}
-			_ = t.uniform()
+			if t.uniform() {
+				continue
+			}
 			targets <- t
 			dbg("Add:[Preload][%v]%v %v", t.Country, t.Postcode, t.City)
 			counter++

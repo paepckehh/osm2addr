@@ -124,7 +124,10 @@ func pbfparser(target *Target) {
 					if t.Postcode != "" && t.City != "" && t.Street != "" {
 						addrComplete++
 						if t.Country == country(target.Country) {
-							uniformErr += t.uniform()
+							if t.uniform() {
+								uniformErr++
+								continue
+							}
 							targets <- &t
 						} else {
 							dbg("Drop:[Country][Mismatch][Node:%v][Tags:%v]%v != %v", o.ID, o.Tags, t.Country, target.Country)

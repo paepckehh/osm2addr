@@ -6,29 +6,31 @@ import (
 	"strings"
 )
 
-// uniformDE
-func (t *tagSet) uniformDE() int {
-	count := 0
+// uniformDE returns true when the tagSet must be dropped entirely (e.g. a
+// non-conform postcode for the target country). A false return signals the
+// entry is conform and may be kept; city/street normalization is applied in
+// place regardless of the drop decision.
+func (t *tagSet) uniformDE() bool {
 	if !isLatin1(string(t.City)) {
 		dbg("Drop:[NonLatin1][City][%v]%v", t.Country, t.City)
 		fmt.Printf("\n[City][Latin1][%v]%v", t.Country, t.City)
-		return 1
+		return true
 	}
 	if t.Street != "" && !isLatin1(string(t.Street)) {
 		dbg("Drop:[NonLatin1][Street][%v]%v", t.Country, t.Street)
 		fmt.Printf("\n[Street][Latin1][%v]%v", t.Country, t.Street)
-		return 1
+		return true
 	}
 	p, err := strconv.Atoi(string(t.Postcode))
 	if err != nil {
 		dbg("Drop:[Postcode][Parse][%v]%v", t.Country, t.Postcode)
 		fmt.Printf("\n[Postcode][Parse][%v]%v", t.Country, t.Postcode)
-		return 1
+		return true
 	}
 	if p < 0 || p > 99999 {
 		dbg("Drop:[Postcode][Range][%v]%v", t.Country, t.Postcode)
 		fmt.Printf("\n[Postcode][Range][%v]%v", t.Country, t.Postcode)
-		return 1
+		return true
 	}
 	pc := strconv.Itoa(p)
 	switch len(pc) {
@@ -40,18 +42,13 @@ func (t *tagSet) uniformDE() int {
 	default:
 		dbg("Drop:[Postcode][Length][%v]%v", t.Country, t.Postcode)
 		fmt.Printf("\n[Postcode][Length][%v]%v", t.Country, t.Postcode)
-		return 1
+		return true
 	}
-	var ok bool
-	if t.City, ok = tryNormCityDE(t.City); !ok {
-		count++
-	}
+	t.City, _ = tryNormCityDE(t.City)
 	if t.Street != "" {
-		if t.Street, ok = tryNormStreetDE(t.Street); !ok {
-			count++
-		}
+		t.Street, _ = tryNormStreetDE(t.Street)
 	}
-	return count
+	return false
 }
 
 // tryNormStreetDE ...
