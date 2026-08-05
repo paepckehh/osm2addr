@@ -44,15 +44,15 @@ func (t *tagSet) uniformDE() bool {
 		fmt.Printf("\n[Postcode][Length][%v]%v", t.Country, t.Postcode)
 		return true
 	}
-	t.City, _ = tryNormCityDE(t.City)
+	t.City = tryNormCityDE(t.City)
 	if t.Street != "" {
-		t.Street, _ = tryNormStreetDE(t.Street)
+		t.Street = tryNormStreetDE(t.Street)
 	}
 	return false
 }
 
 // tryNormStreetDE ...
-func tryNormStreetDE(in street) (street, bool) {
+func tryNormStreetDE(in street) street {
 	s := string(in)
 	s = strings.ReplaceAll(s, "Strasse", "Straße")
 	s = strings.ReplaceAll(s, "Str.", "Straße")
@@ -62,13 +62,12 @@ func tryNormStreetDE(in street) (street, bool) {
 	s = strings.ReplaceAll(s, "strasse", "straße")
 	if street(s) != in {
 		dbg("Norm:[Street][DE]%v =====> %v", in, s)
-		return street(s), false
 	}
-	return street(s), true
+	return street(s)
 }
 
 // tryNormCityDE ...
-func tryNormCityDE(in city) (city, bool) {
+func tryNormCityDE(in city) city {
 	s := string(in)
 	if strings.Contains(s, ".") {
 		s = tryNormCityDEShortcut(s)
@@ -77,9 +76,8 @@ func tryNormCityDE(in city) (city, bool) {
 	s = tryNormCityDETypo(s)
 	if s != string(in) {
 		dbg("Norm:[City][DE]%v =====> %v", in, s)
-		return city(s), false
 	}
-	return city(s), true
+	return city(s)
 }
 
 // tryNormCityDETypo ...

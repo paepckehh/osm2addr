@@ -55,9 +55,6 @@ func collect(target *Target) {
 			correctedCity := false
 			inNorm := strings.ReplaceAll(string(t.City), "-", " ")
 			for ci := range places[t.Postcode] {
-				if string(ci) == string(t.City) {
-					continue
-				}
 				if inNorm == strings.ReplaceAll(string(ci), "-", " ") {
 					e := fmt.Sprintf("[CORRECTED][CITY][SEP]#%v#%v#", t.City, ci)
 					corrected[e]++
@@ -73,9 +70,6 @@ func collect(target *Target) {
 				places[t.Postcode][t.City] = make(map[street]placeIdHex)
 				places2[t.Postcode][t.City] = make(map[street]bool)
 				for ci := range places[t.Postcode] {
-					if string(ci) == string(t.City) {
-						continue
-					}
 					distance := levenshtein.ComputeDistance(string(ci), string(t.City))
 					if distance < 2 {
 						e := fmt.Sprintf("[WARNING][LEVENSHTEIN:%v][POSTCODE:%v][CITY]#%v#%v#", distance, t.Postcode, ci, t.City)

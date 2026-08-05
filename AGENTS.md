@@ -95,17 +95,17 @@ keeping up.
   parallelism; the PBF decoder parallelism is controlled separately inside
   `internal/pbf` via `runtime.GOMAXPROCS` (`DefaultNCpu` = max(GOMAXPROCS-1, 1)).
 - The PBF decoder uses `github.com/destel/rill` for pipelined
-  blob→batch→object processing; the `rill.DrainNB` call in
-  `internal/pbf/decoder.go` is currently flagged deprecated upstream (use
-  `Discard`) — a known cleanup candidate.
+  blob→batch→object processing; the `rill.Discard` call in
+  `internal/pbf/decoder.go` drains the background pipeline on `Decoder.Close`.
 
 ### PBF decoding stack (`internal/`)
 
 - `internal/decoder` — low-level PBF blob/header parsing; converts
   `PrimitiveBlock`s into `model.Object`s. Note: only **Nodes** and
   **DenseNodes** are decoded into elements; `parser.go` switches on
-  `*model.Node`, `*model.Way`, `*model.Relation`, but Way and Relation cases
-  are empty — the tool effectively only processes nodes with `addr:*` tags.
+  `*model.Node`, `*model.Way`, `*model.Relation`, `*model.Header` (Way,
+  Relation and Header cases are no-ops — the tool effectively only processes
+  nodes with `addr:*` tags); the `default` case panics on truly unknown types.
 - `internal/pbf` — public `Decoder` over `internal/decoder`, configurable via
   functional options (`WithProtoBufferSize`, `WithProtoBatchSize`,
   `WithNCpus`). Default batch size 16, buffer 1 MiB.

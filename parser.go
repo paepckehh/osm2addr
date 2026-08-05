@@ -118,9 +118,7 @@ func pbfparser(target *Target) {
 						dbg("Norm:[Country][Default]%v =====> %v", t.Country, target.Country)
 						t.Country = country(target.Country)
 					}
-					if !countries[country(t.Country)] {
-						countries[country(t.Country)] = true
-					}
+					countries[country(t.Country)] = true
 					if t.Postcode != "" && t.City != "" && t.Street != "" {
 						addrComplete++
 						if t.Country == country(target.Country) {
@@ -138,6 +136,7 @@ func pbfparser(target *Target) {
 				}
 			case *model.Way:
 			case *model.Relation:
+			case *model.Header:
 			default:
 				panic("internal error, unknown osm model type")
 			}

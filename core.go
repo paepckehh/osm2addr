@@ -42,7 +42,7 @@ type street string     //`json:"street"`
 var preload, parser, collector sync.WaitGroup
 var targets = make(chan *tagSet)
 
-// Parse inut files
+// Parse input files
 func Parse(target *Target) error {
 
 	// checkPreloadFile
