@@ -8,9 +8,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
-  issues: write
-  # id-token: write
 
 jobs:
   goreleaser:
@@ -24,7 +21,21 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: stable
-      - name: Run GoReleaser
+      - name: GoReleaser config check
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check
+      - name: Run GoReleaser (snapshot)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: build --snapshot --clean
+      - name: Run GoReleaser (release)
+        if: startsWith(github.ref, 'refs/tags/')
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser

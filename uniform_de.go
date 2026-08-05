@@ -22,10 +22,12 @@ func (t *tagSet) uniformDE() int {
 	p, err := strconv.Atoi(string(t.Postcode))
 	if err != nil {
 		dbg("Drop:[Postcode][Parse][%v]%v", t.Country, t.Postcode)
+		fmt.Printf("\n[Postcode][Parse][%v]%v", t.Country, t.Postcode)
 		return 1
 	}
 	if p < 0 || p > 99999 {
 		dbg("Drop:[Postcode][Range][%v]%v", t.Country, t.Postcode)
+		fmt.Printf("\n[Postcode][Range][%v]%v", t.Country, t.Postcode)
 		return 1
 	}
 	pc := strconv.Itoa(p)
@@ -37,6 +39,7 @@ func (t *tagSet) uniformDE() int {
 		t.Postcode = postcode("0" + pc)
 	default:
 		dbg("Drop:[Postcode][Length][%v]%v", t.Country, t.Postcode)
+		fmt.Printf("\n[Postcode][Length][%v]%v", t.Country, t.Postcode)
 		return 1
 	}
 	var ok bool

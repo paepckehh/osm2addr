@@ -1,4 +1,5 @@
 /osm2addr
+osm2addr
 json/*
 data/*
 cmd/osm2addr/osm2addr
