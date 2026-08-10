@@ -21,10 +21,10 @@ build:
 	go build $(LDFLAGS) -o $(PROJECT) ./cmd/$(PROJECT)
 
 deps: 
-	git config core.fileMode false
 	rm go.mod go.sum
 	go mod init paepcke.de/$(PROJECT)
 	go mod tidy -v	
+	git config core.fileMode false
 
 check: 
 	gofmt -w -s .
