@@ -46,19 +46,16 @@ var targets = make(chan *tagSet)
 func Parse(target *Target) error {
 
 	// checkPreloadFile
-	preload.Add(1)
-	go target.preloadFeed()
+	preload.Go(target.preloadFeed)
 
 	// spin up collector
-	collector.Add(1)
-	go collect(target)
+	collector.Go(func() { collect(target) })
 
 	// wait till preload is done
 	preload.Wait()
 
 	// spin up parser
-	parser.Add(1)
-	go pbfparser(target)
+	parser.Go(func() { pbfparser(target) })
 
 	// wait till all parser done
 	parser.Wait()

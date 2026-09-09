@@ -2,6 +2,7 @@ package osm2addr
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,7 +11,6 @@ import (
 
 // preloadFeed ...
 func (target *Target) preloadFeed() {
-	defer preload.Done()
 	if target.checkPreloadFile() {
 
 		// init
@@ -37,10 +37,14 @@ func (target *Target) preloadFeed() {
 		for {
 			row, err := r.Read()
 			if err != nil {
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					break
 				}
-				panic(err)
+				e := fmt.Sprintf("[ERROR][PRE][CSV][PARSE]#%v#", err)
+				fail[e]++
+				failCounter++
+				dbg("Drop:[Preload][CSV][Parse]%v", err)
+				continue
 			}
 			if len(row[target.PreLoad.City]) < 2 {
 				e := fmt.Sprintf("[ERROR][PRE][CITY][LENGHT]#%v#%v#", row[target.PreLoad.Postcode], row[target.PreLoad.City])

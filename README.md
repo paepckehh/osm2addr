@@ -81,8 +81,10 @@ is parsed as a comma-separated CSV with **6 fields per record**, a header row
 | City      | 2      |
 | Postcode  | 3      |
 
-Expected postcode length is **5** (German). Records failing length checks are
-counted into `json/<CC>/error.preload.json`. The preload feeds the same
+Expected postcode length is **5** (German). Records failing length checks —
+and CSV rows that fail to parse (e.g. wrong field count, stray quote) — are
+counted into `json/<CC>/error.preload.json` instead of aborting the run. The
+preload feeds the same
 `targets` channel as the PBF parser, so its entries participate in dedup and
 place-ID generation.
 

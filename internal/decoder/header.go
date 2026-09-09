@@ -46,11 +46,9 @@ func LoadHeader(reader io.Reader) (model.Header, error) {
 		return model.Header{}, err
 	}
 
-	if hdr, ok := e[0].(*model.Header); !ok {
-		err = fmt.Errorf("expected header data but got %v", reflect.TypeOf(e[0]))
-
-		return model.Header{}, err
-	} else {
-		return *hdr, nil
+	hdr, ok := e[0].(*model.Header)
+	if !ok {
+		return model.Header{}, fmt.Errorf("expected header data but got %v", reflect.TypeOf(e[0]))
 	}
+	return *hdr, nil
 }

@@ -55,7 +55,7 @@ func Generate(ctx context.Context, reader io.Reader) func(yield func(enc blob, e
 
 			h, err := readBlobHeader(buffer, reader)
 			if err != nil {
-				if err != io.EOF {
+				if !errors.Is(err, io.EOF) {
 					slog.Error(err.Error())
 					yield(blob{}, err)
 				}

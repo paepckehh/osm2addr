@@ -20,7 +20,6 @@ func main() {
 
 	// init
 	ts := time.Now()
-	var err error
 	osm2addr.InitDebug()
 
 	// setup defaults
@@ -38,14 +37,6 @@ func main() {
 		target.Country = strings.ToUpper(os.Args[1])
 	}
 	if len(os.Args) > 2 {
-		t, err := os.Open(os.Args[2])
-		if err != nil {
-			log.Printf("[OSM2ADDR][ERROR][FATAL] Unable to read: %v", os.Args[2])
-			log.Fatal("[OSM2ADDR][ERROR][FATAL] Target File, if specified, must be a readable file (example: osm2addr DE ../../data/germany-latest.osm.pbf)")
-		}
-		if err := t.Close(); err != nil {
-			log.Printf("[OSM2ADDR][ERROR][FATAL] Unable to close: %v: %v", os.Args[2], err)
-		}
 		target.FileName = os.Args[2]
 	}
 
@@ -58,10 +49,11 @@ func main() {
 	fmt.Printf("\nOSM:File                  # %v", target.FileName)
 
 	// open file
-	target.File, err = os.Open(target.FileName)
+	t, err := os.Open(target.FileName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("[OSM2ADDR][ERROR][FATAL] Unable to read: %v: %v", target.FileName, err)
 	}
+	target.File = t
 	defer func() {
 		if err := target.File.Close(); err != nil {
 			fmt.Printf("[OSM2ADDR][ERROR] during file close: %s", err)

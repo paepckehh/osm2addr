@@ -53,7 +53,6 @@ func pbfparser(target *Target) {
 			fmt.Printf("\nOSM:PBF:Err:Postcode      # %v", hu(postcodeErr))
 			fmt.Printf("\nOSM:PBF:Err:City          # %v", hu(cityErr))
 			fmt.Printf("\nOSM:PBF:Err:Street        # %v", hu(streetErr))
-			parser.Done()
 			return
 		}
 		for _, obj := range objs {
@@ -64,7 +63,7 @@ func pbfparser(target *Target) {
 					t := tagSet{} // init new tag set
 					for tag, content := range o.Tags {
 						tagCounter++
-						if len(tag) >= 6 && tag[:5] == "addr:" {
+						if strings.HasPrefix(tag, "addr:") {
 							addrTag := strings.Split(tag, ":")
 							if len(addrTag) > 1 {
 								switch addrTag[1] {

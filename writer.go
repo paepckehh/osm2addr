@@ -10,7 +10,9 @@ import (
 // writeJsonFile ...
 func writeJsonFile(countrycode, filename string, in any) {
 	folder := filepath.Join("json", countrycode)
-	_ = os.MkdirAll(folder, 0755)
+	if err := os.MkdirAll(folder, 0755); err != nil {
+		panic(err)
+	}
 	j, err := json.MarshalIndent(&in, "", "\t")
 	if err != nil {
 		panic(err)

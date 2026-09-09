@@ -11,7 +11,6 @@ import (
 func collect(target *Target) {
 
 	// init
-	var ok bool
 	warning, warningCounter := make(map[string]int), 0
 	corrected, correctedCounter := make(map[string]int), 0
 	placeIDs := make(map[placeID]tagSet)
@@ -21,13 +20,13 @@ func collect(target *Target) {
 	// range over targets channel
 	for t := range targets {
 		pid := id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
-		if _, ok = placeIDs[pid]; ok {
+		if _, ok := placeIDs[pid]; ok {
 			dbg("Drop:[Dedup][PlaceID][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 			continue
 		}
 
 		// new postcode: init maps and seed city
-		if _, ok = places[t.Postcode]; !ok {
+		if _, ok := places[t.Postcode]; !ok {
 			places[t.Postcode] = make(map[city]map[street]placeIdHex)
 			places2[t.Postcode] = make(map[city]map[street]bool)
 			places[t.Postcode][t.City] = make(map[street]placeIdHex)
@@ -51,7 +50,7 @@ func collect(target *Target) {
 		// e.g. "Bad Homburg" vs "Bad-Homburg". A multi-token city must never be
 		// collapsed into an unrelated single-token prefix ("Berlin Mitte" must
 		// not merge into "Berlin"), otherwise its streets are silently lost.
-		if _, ok = places[t.Postcode][t.City]; !ok {
+		if _, ok := places[t.Postcode][t.City]; !ok {
 			correctedCity := false
 			inNorm := strings.ReplaceAll(string(t.City), "-", " ")
 			for ci := range places[t.Postcode] {
@@ -82,14 +81,14 @@ func collect(target *Target) {
 		}
 
 		// re-check dedup after city correction may have changed pid
-		if _, ok = placeIDs[pid]; ok {
+		if _, ok := placeIDs[pid]; ok {
 			dbg("Drop:[Dedup][PostCorrect][PlaceID][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 			continue
 		}
 
 		// add street
 		if t.Street != "" {
-			if _, ok = places[t.Postcode][t.City][t.Street]; !ok {
+			if _, ok := places[t.Postcode][t.City][t.Street]; !ok {
 				places[t.Postcode][t.City][t.Street] = pid.hex()
 				places2[t.Postcode][t.City][t.Street] = true
 				placeIDs[pid] = *t
@@ -107,12 +106,10 @@ func collect(target *Target) {
 	p := make(map[string]tagSet, len(placeIDs))
 	for pid, tset := range placeIDs {
 		p[string(pid.hex())] = tset
-
 	}
 	writeJsonFile(target.Country, "addr.json", places2)
 	writeJsonFile(target.Country, "addr2placeID.json", places)
 	writeJsonFile(target.Country, "placeID2addr.json", p)
 	writeJsonFile(target.Country, "warning.json", warning)
 	writeJsonFile(target.Country, "corrected.json", corrected)
-	collector.Done()
 }

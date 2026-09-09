@@ -26,9 +26,12 @@ func TestInitDebug(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.env, func(t *testing.T) {
-			os.Unsetenv("DEBUG")
-			if c.env != "" {
-				os.Setenv("DEBUG", c.env)
+			if c.env == "" {
+				if err := os.Unsetenv("DEBUG"); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				t.Setenv("DEBUG", c.env)
 			}
 			debug = false
 			InitDebug()
@@ -40,7 +43,9 @@ func TestInitDebug(t *testing.T) {
 }
 
 func TestInitDebugUnset(t *testing.T) {
-	os.Unsetenv("DEBUG")
+	if err := os.Unsetenv("DEBUG"); err != nil {
+		t.Fatal(err)
+	}
 	debug = true
 	InitDebug()
 	if debug {
