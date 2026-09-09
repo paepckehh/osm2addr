@@ -5,3 +5,4 @@ data/*
 cmd/osm2addr/osm2addr
 cmd/osm2addr/json/*
 cmd/osm2addr/data/*
+*.swp

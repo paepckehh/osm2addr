@@ -19,6 +19,15 @@ type Target struct {
 		Postcode       int
 		PostcodeLenght int
 	}
+	PreLoadTrusted struct {
+		File     *os.File
+		Filename string
+		Comma    rune
+		Fields   int
+		City     int
+		Postcode int
+		Street   int
+	}
 }
 
 // tagSet ...
@@ -45,11 +54,15 @@ var targets = make(chan *tagSet)
 // Parse input files
 func Parse(target *Target) error {
 
-	// checkPreloadFile
-	preload.Go(target.preloadFeed)
-
 	// spin up collector
 	collector.Go(func() { collect(target) })
+
+	// trusted preload.csv feeds first, wait till done
+	preload.Go(target.trustedPreloadFeed)
+	preload.Wait()
+
+	// checkPreloadFile
+	preload.Go(target.preloadFeed)
 
 	// wait till preload is done
 	preload.Wait()

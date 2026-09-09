@@ -88,6 +88,24 @@ preload feeds the same
 `targets` channel as the PBF parser, so its entries participate in dedup and
 place-ID generation.
 
+### Trusted preload CSV (optional)
+
+If a file named `preload.csv` exists at program start (next to the PBF file,
+or in the process working directory as fallback), it is loaded as trusted
+start values before any other input:
+
+- The first line is assumed to be a valid CSV header; the separator is
+  detected from the header line (`,` is the assumed default, `;`, tab and
+  `|` are detected) and UTF-8 encoding is confirmed.
+- The header must contain the exact field names `POSTLEITZAHL`, `ORT_NAME`
+  and `STRASSE_NAME`. If any of them is missing, the file is rejected.
+- Its rows are fed into the pipeline **first** and are treated as trusted
+  postcode/city/street values: no country-specific normalization or
+  matching is applied. They pre-seed all place index arrays before the
+  OSM import data is processed in the usual way.
+- Rows that fail CSV parsing are counted into
+  `json/<CC>/error.preload.trusted.json` instead of aborting the run.
+
 ### Sample output
 
 ```
@@ -159,6 +177,7 @@ overwritten silently.
 | `warning.json` | message → count (Levenshtein near-duplicates + non-preloaded postcode/city) |
 | `corrected.json` | message → count (auto-corrected city separators) |
 | `error.preload.json` | message → count (preload CSV length errors) |
+| `error.preload.trusted.json` | message → count (trusted preload.csv CSV parse errors) |
 
 ### Place ID
 
@@ -172,12 +191,14 @@ invalidates all previously generated mapping tables.
 The pipeline is a fixed three-stage goroutine chain wired in `core.go::Parse`:
 
 ```
-preloadFeed (csv)  ──┐
-                     ├──>  chan *tagSet  targets  ──>  collect ──> JSON files
+preload.csv (trusted) ─┐
+preloadFeed (csv)  ───┼──>  chan *tagSet  targets  ──>  collect ──> JSON files
 pbfparser (pbf)   ────┘
 ```
 
-1. **`preloadFeed`** streams validated postcode/city pairs from the CSV into
+1. **`trustedPreloadFeed`** streams trusted postcode/city/street rows from
+   `preload.csv` into the `targets` channel, ahead of all other input.
+2. **`preloadFeed`** streams validated postcode/city pairs from the CSV into
    the `targets` channel.
 2. **`collect`** drains `targets`, building the in-memory place index and
    emitting JSON. All dedup/correction logic lives here.

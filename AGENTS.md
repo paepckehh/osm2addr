@@ -63,25 +63,42 @@ as the PBF parser, so its entries participate in dedup and place-ID
 generation. If the preload file is missing, the run proceeds without it
 (`OSM:PreLoadFile # n/a`).
 
+### Trusted preload.csv (optional)
+
+At startup, before the validated preload, `trustedPreloadFeed`
+(`preload_trusted.go`) looks for a file named `preload.csv` next to the PBF
+file (process CWD as fallback). The first line must be a valid UTF-8 CSV
+header whose separator is auto-detected (`,` assumed by default; `;`, tab,
+`|` detected) and which contains the exact field names `POSTLEITZAHL`,
+`ORT_NAME` and `STRASSE_NAME`. If confirmed, the rows are fed into `targets`
+**first** as trusted postcode/city/street values: `uniform` normalization is
+deliberately skipped and no matching is attempted. Malformed rows are counted
+into `json/<CC>/error.preload.trusted.json`. Order in `core.go::Parse`:
+collector → trusted preload (wait) → validated preload (wait) → PBF parser.
+
 ## Architecture & Data Flow
 
 The pipeline is a fixed three-stage goroutine chain wired in
 `core.go::Parse`:
 
 ```
-preloadFeed (csv)  ──┐
-                     ├──>  chan *tagSet  targets  ──>  collect ──> JSON files
-pbfparser (pbf)  ────┘
+preload.csv (trusted) ─┐
+preloadFeed (csv)  ───┼──>  chan *tagSet  targets  ──>  collect ──> JSON files
+pbfparser (pbf)   ────┘
 ```
 
-1. **`preloadFeed`** (`preload.go`) — started first, in its own goroutine.
-   Streams validated postcode/city pairs from the CSV into `targets`.
-2. **`collect`** (`collect.go`) — started next; ranges over `targets` until
+1. **`trustedPreloadFeed`** (`preload_trusted.go`) — started first, in its
+   own goroutine. Streams trusted postcode/city/street rows from
+   `preload.csv` into `targets` (no `uniform` normalization).
+2. **`preloadFeed`** (`preload.go`) — started after the trusted preload
+   finishes. Streams validated postcode/city pairs from the CSV into
+   `targets`.
+3. **`collect`** (`collect.go`) — spun up in its own goroutine before the\n   feeds; ranges over `targets` until
    the channel is closed, building the in-memory place index and emitting
    JSON. Single goroutine; all dedup/correction logic lives here.
-3. **`pbfparser`** (`parser.go`) — started only **after** `preload.Wait()`
+4. **`pbfparser`** (`parser.go`) — started only **after** `preload.Wait()`
    returns. Decodes the PBF and pushes qualifying tag sets into `targets`.
-4. After the parser finishes, `close(targets)` lets `collect` drain and exit.
+5. After the parser finishes, `close(targets)` lets `collect` drain and exit.
 
 Ordering matters: preload must finish before the parser starts because both
 feed the same unbuffered `targets` channel and `collect` is the sole
