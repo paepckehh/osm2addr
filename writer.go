@@ -8,8 +8,8 @@ import (
 )
 
 // writeJsonFile ...
-func writeJsonFile(countrycode, filename string, in any) {
-	folder := filepath.Join("json", countrycode)
+func writeJsonFile(base, countrycode, filename string, in any) {
+	folder := filepath.Join(base, countrycode)
 	if err := os.MkdirAll(folder, 0755); err != nil {
 		panic(err)
 	}

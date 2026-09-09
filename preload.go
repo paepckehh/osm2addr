@@ -10,7 +10,7 @@ import (
 )
 
 // preloadFeed ...
-func (target *Target) preloadFeed() {
+func (target *Target) preloadFeed(targets chan<- *tagSet) {
 	if target.checkPreloadFile() {
 
 		// init
@@ -53,7 +53,7 @@ func (target *Target) preloadFeed() {
 				dbg("Drop:[Preload][City][Length]%v %v", row[target.PreLoad.Postcode], row[target.PreLoad.City])
 				continue
 			}
-			if len(row[target.PreLoad.Postcode]) != target.PreLoad.PostcodeLenght {
+			if len(row[target.PreLoad.Postcode]) != target.PreLoad.PostcodeLength {
 				e := fmt.Sprintf("[ERROR][PRE][POSTCODE][LENGHT]#%v#%v#", row[target.PreLoad.Postcode], row[target.PreLoad.City])
 				fail[e]++
 				failCounter++
@@ -76,7 +76,7 @@ func (target *Target) preloadFeed() {
 		}
 		fmt.Printf("\nOSM:PreLoadFile:Fail      # %v", failCounter)
 		fmt.Printf("\nOSM:PreLoadFile:Total     # %v", counter)
-		writeJsonFile(target.Country, "error.preload.json", fail)
+		writeJsonFile(target.outBase(), target.Country, "error.preload.json", fail)
 	}
 }
 
@@ -96,10 +96,10 @@ func (target *Target) checkPreloadFile() bool {
 		target.PreLoad.Fields = 6
 		target.PreLoad.City = 2
 		target.PreLoad.Postcode = 3
-		target.PreLoad.PostcodeLenght = 5
+		target.PreLoad.PostcodeLength = 5
 		return true
 	}
-	if os.IsNotExist(err) {
+	if errors.Is(err, os.ErrNotExist) {
 		target.PreLoad.Filename = "n/a"
 		fmt.Printf("\nOSM:PreLoadFile           # %v", target.PreLoad.Filename)
 		return false

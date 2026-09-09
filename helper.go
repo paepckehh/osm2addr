@@ -58,12 +58,9 @@ func hu(in int) string {
 
 // makeCapitalLetter ....
 func makeCapitalLetter(in string) string {
-	if len(in) < 1 {
-		return ""
-	}
 	r, size := utf8.DecodeRuneInString(in)
-	if r == utf8.RuneError {
-		panic("internal utf8 error")
+	if r == utf8.RuneError && size <= 1 {
+		return in
 	}
 	return string(unicode.ToUpper(r)) + in[size:]
 }

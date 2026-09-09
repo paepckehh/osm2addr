@@ -13,7 +13,7 @@ import (
 )
 
 // trustedPreloadFeed ...
-func (target *Target) trustedPreloadFeed() {
+func (target *Target) trustedPreloadFeed(targets chan<- *tagSet) {
 	if target.checkTrustedPreloadFile() {
 
 		// init
@@ -70,7 +70,7 @@ func (target *Target) trustedPreloadFeed() {
 		}
 		fmt.Printf("\nOSM:PreLoadTrusted:Fail   # %v", failCounter)
 		fmt.Printf("\nOSM:PreLoadTrusted:Total  # %v", counter)
-		writeJsonFile(target.Country, "error.preload.trusted.json", fail)
+		writeJsonFile(target.outBase(), target.Country, "error.preload.trusted.json", fail)
 	}
 }
 
@@ -126,8 +126,8 @@ func trustedPreloadHeader(f *os.File) (ok bool, sep rune, city, postcode, street
 	sep, city, postcode, street = ',', -1, -1, -1
 
 	// read first line, assume it is a valid csv header
-	line, _ := bufio.NewReader(f).ReadString('\n')
-	if line == "" {
+	line, err := bufio.NewReader(f).ReadString('\n')
+	if err != nil && line == "" {
 		return false, sep, city, postcode, street
 	}
 	line = strings.TrimSuffix(line, "\n")

@@ -12,7 +12,7 @@ import (
 )
 
 // pbfparser for osm pbf files
-func pbfparser(target *Target) {
+func pbfparser(target *Target, targets chan<- *tagSet) {
 
 	// osm decoder
 	d, err := pbf.NewDecoder(context.Background(), target.File)
@@ -63,53 +63,47 @@ func pbfparser(target *Target) {
 					t := tagSet{} // init new tag set
 					for tag, content := range o.Tags {
 						tagCounter++
-						if strings.HasPrefix(tag, "addr:") {
-							addrTag := strings.Split(tag, ":")
-							if len(addrTag) > 1 {
-								switch addrTag[1] {
-								case "country":
-									countryCounter++
-									if len(content) != 2 {
-										countryErr++
-										dbg("Drop:[Country][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
-										continue
-									}
-									if content != strings.ToUpper(content) {
-										countryErr++
-										dbg("Drop:[Country][Case][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
-										continue
-									}
-									t.Country = country(content)
-								case "street":
-									streetCounter++
-									l := len(content)
-									if l < 3 || l > 256 {
-										streetErr++
-										dbg("Drop:[Street][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
-										continue
-									}
-									t.Street = street(content)
-								case "city":
-									cityCounter++
-									l := len(content)
-									if l < 2 || l > 256 {
-										cityErr++
-										dbg("Drop:[City][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
-										continue
-									}
-									t.City = city(content)
-								case "postcode":
-									postcodeCounter++
-									l := len(content)
-									if l < 3 || l > 256 {
-										postcodeErr++
-										dbg("Drop:[Postcode][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
-										continue
-									}
-									t.Postcode = postcode(content)
-								}
-
+						switch tag {
+						case "addr:country":
+							countryCounter++
+							if len(content) != 2 {
+								countryErr++
+								dbg("Drop:[Country][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
+								continue
 							}
+							if content != strings.ToUpper(content) {
+								countryErr++
+								dbg("Drop:[Country][Case][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
+								continue
+							}
+							t.Country = country(content)
+						case "addr:street":
+							streetCounter++
+							l := len(content)
+							if l < 3 || l > 256 {
+								streetErr++
+								dbg("Drop:[Street][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
+								continue
+							}
+							t.Street = street(content)
+						case "addr:city":
+							cityCounter++
+							l := len(content)
+							if l < 2 || l > 256 {
+								cityErr++
+								dbg("Drop:[City][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
+								continue
+							}
+							t.City = city(content)
+						case "addr:postcode":
+							postcodeCounter++
+							l := len(content)
+							if l < 3 || l > 256 {
+								postcodeErr++
+								dbg("Drop:[Postcode][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
+								continue
+							}
+							t.Postcode = postcode(content)
 						}
 					}
 

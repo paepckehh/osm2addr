@@ -68,6 +68,9 @@ func (c *blockContext) decodeDenseNodes(nodes *protobuf.DenseNodes) []model.Obje
 
 func (c *blockContext) decodeTags(keyIDs, valIDs []uint32) map[string]string {
 	tags := make(map[string]string, len(keyIDs))
+	if len(keyIDs) > len(valIDs) {
+		return tags
+	}
 	for i, keyID := range keyIDs {
 		tags[c.strings[keyID]] = c.strings[valIDs[i]]
 	}
@@ -78,7 +81,7 @@ func (c *blockContext) decodeInfo(info *protobuf.Info) *model.Info {
 	i := &model.Info{Visible: true}
 	if info != nil {
 		i.Version = info.GetVersion()
-		i.Timestamp = toTimestamp(c.dateGranularity, info.GetTimestamp())
+		i.Timestamp = toTimestamp(c.dateGranularity, int64(info.GetTimestamp()))
 		i.Changeset = info.GetChangeset()
 		i.UID = model.UID(info.GetUid())
 
@@ -126,7 +129,7 @@ func (c *blockContext) newDenseInfoContext(di *protobuf.DenseInfo) *denseInfoCon
 	for i, uid := range di.GetUid() {
 		uids[i] = model.UID(uid)
 	}
-	dic := &denseInfoContext{
+	return &denseInfoContext{
 		dateGranularity: c.dateGranularity,
 		strings:         c.strings,
 		versions:        di.GetVersion(),
@@ -134,32 +137,33 @@ func (c *blockContext) newDenseInfoContext(di *protobuf.DenseInfo) *denseInfoCon
 		timestamps:      di.GetTimestamp(),
 		changesets:      di.GetChangeset(),
 		userSids:        di.GetUserSid(),
+		visibilities:    di.GetVisible(),
 	}
-	visibilities := di.GetVisible()
-	if visibilities != nil && len(visibilities) == 0 {
-		dic.visibilities = nil
-	} else {
-		dic.visibilities = visibilities
-	}
-	return dic
 }
 
 func (dic *denseInfoContext) decodeInfo(i int) *model.Info {
-	dic.version = dic.versions[i] + dic.version
-	dic.uid = dic.uids[i] + dic.uid
-	dic.timestamp = dic.timestamps[i] + dic.timestamp
-	dic.changeset = dic.changesets[i] + dic.changeset
-	dic.userSid = dic.userSids[i] + dic.userSid
-	info := &model.Info{
-		Version:   dic.version,
-		UID:       dic.uid,
-		Timestamp: toTimestamp(dic.dateGranularity, int32(dic.timestamp)),
-		Changeset: dic.changeset,
-		User:      dic.strings[dic.userSid],
+	info := &model.Info{Visible: true}
+	if i < len(dic.versions) {
+		dic.version += dic.versions[i]
+		info.Version = dic.version
 	}
-	if dic.visibilities == nil {
-		info.Visible = true
-	} else {
+	if i < len(dic.uids) {
+		dic.uid += dic.uids[i]
+		info.UID = dic.uid
+	}
+	if i < len(dic.timestamps) {
+		dic.timestamp += dic.timestamps[i]
+		info.Timestamp = toTimestamp(dic.dateGranularity, dic.timestamp)
+	}
+	if i < len(dic.changesets) {
+		dic.changeset += dic.changesets[i]
+		info.Changeset = dic.changeset
+	}
+	if i < len(dic.userSids) {
+		dic.userSid += dic.userSids[i]
+		info.User = dic.strings[dic.userSid]
+	}
+	if i < len(dic.visibilities) {
 		info.Visible = dic.visibilities[i]
 	}
 	return info
@@ -172,20 +176,13 @@ type tagsContext struct {
 }
 
 func (c *blockContext) newTagsContext(keyVals []int32) *tagsContext {
-	tc := &tagsContext{strings: c.strings}
-	if len(keyVals) != 0 {
-		tc.keyVals = keyVals
-	}
-	return tc
+	return &tagsContext{strings: c.strings, keyVals: keyVals}
 }
 
 func (tic *tagsContext) decodeTags() map[string]string {
-	if tic.keyVals == nil {
-		return map[string]string{}
-	}
-	tags := make(map[string]string)
+	tags := map[string]string{}
 	i := tic.i
-	for tic.keyVals[i] > 0 {
+	for i+1 < len(tic.keyVals) && tic.keyVals[i] > 0 {
 		tags[tic.strings[tic.keyVals[i]]] = tic.strings[tic.keyVals[i+1]]
 		i += 2
 	}
@@ -195,7 +192,7 @@ func (tic *tagsContext) decodeTags() map[string]string {
 
 // toTimestamp converts a timestamp with a specific granularity, in units of
 // milliseconds, to a UTC timestamp of type Time.
-func toTimestamp(granularity int32, timestamp int32) time.Time {
-	ms := time.Duration(timestamp*granularity) * time.Millisecond
-	return time.Unix(0, ms.Nanoseconds()).UTC()
+func toTimestamp(granularity int32, timestamp int64) time.Time {
+	ms := time.Duration(timestamp) * time.Duration(granularity) * time.Millisecond
+	return time.Unix(0, int64(ms)).UTC()
 }

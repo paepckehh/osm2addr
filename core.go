@@ -17,7 +17,7 @@ type Target struct {
 		Fields         int
 		City           int
 		Postcode       int
-		PostcodeLenght int
+		PostcodeLength int
 	}
 	PreLoadTrusted struct {
 		File     *os.File
@@ -28,6 +28,9 @@ type Target struct {
 		Postcode int
 		Street   int
 	}
+
+	// outDir overrides the json/ output base directory (used by tests)
+	outDir string
 }
 
 // tagSet ...
@@ -39,44 +42,44 @@ type tagSet struct {
 	Preloaded bool     `json:"-"`
 }
 
-// Schema ...
 type placeID [12]byte
-type placeIdHex string //`json:"placeid"`
-type country string    //`json:"country"`
-type postcode string   //`json:"postcode"`
-type city string       //`json:"city"`
-type street string     //`json:"street"`
+type placeIdHex string
+type country string
+type postcode string
+type city string
+type street string
 
-// global channel and mutex
-var preload, parser, collector sync.WaitGroup
-var targets = make(chan *tagSet)
+// outBase returns the directory that receives the per-country json output
+func (t *Target) outBase() string {
+	if t.outDir != "" {
+		return t.outDir
+	}
+	return "json"
+}
 
 // Parse input files
 func Parse(target *Target) error {
 
+	// all producers feed the same unbuffered targets channel, the sole
+	// consumer is the collector
+	targets := make(chan *tagSet)
+	var parser, collector sync.WaitGroup
+
 	// spin up collector
-	collector.Go(func() { collect(target) })
+	collector.Go(func() { collect(target, targets) })
 
-	// trusted preload.csv feeds first, wait till done
-	preload.Go(target.trustedPreloadFeed)
-	preload.Wait()
-
-	// checkPreloadFile
-	preload.Go(target.preloadFeed)
-
-	// wait till preload is done
-	preload.Wait()
+	// trusted preload.csv feeds first, then the validated preload csv;
+	// both run to completion before the pbf parser starts
+	target.trustedPreloadFeed(targets)
+	target.preloadFeed(targets)
 
 	// spin up parser
-	parser.Go(func() { pbfparser(target) })
+	parser.Go(func() { pbfparser(target, targets) })
 
-	// wait till all parser done
+	// wait till parser done, then let the collector drain and exit
 	parser.Wait()
 	close(targets)
-
-	// wait till collector done
 	collector.Wait()
 
-	// return
 	return nil
 }

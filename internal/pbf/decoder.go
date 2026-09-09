@@ -39,15 +39,17 @@ func NewDecoder(ctx context.Context, rdr io.Reader, opts ...DecoderOption) (*Dec
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	ctx, d.cancel = context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(ctx)
 	hdr, err := decoder.LoadHeader(rdr)
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 	d.Header = hdr
+	d.cancel = cancel
 	blobs := rill.FromSeq2(decoder.Generate(ctx, rdr))
 	batches := rill.Batch(blobs, cfg.protoBatchSize, time.Second)
-	objects := rill.FlatMap(batches, int(cfg.nCPU), decoder.Decode)
+	objects := rill.FlatMap(batches, max(int(cfg.nCPU), 1), decoder.Decode)
 	d.Objects = objects
 	return d, nil
 }

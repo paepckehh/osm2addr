@@ -81,46 +81,45 @@ collector → trusted preload (wait) → validated preload (wait) → PBF parser
 
 ## Architecture & Data Flow
 
-The pipeline is a fixed three-stage goroutine chain wired in
-`core.go::Parse`:
+The pipeline is a producer/consumer chain wired in `core.go::Parse`:
 
 ```
-preload.csv (trusted) ─┐
-preloadFeed (csv)  ───┼──>  chan *tagSet  targets  ──>  collect ──> JSON files
-pbfparser (pbf)   ────┘
+preload.csv (trusted)  ──┐
+validated preload (csv) ──┼──>  chan *tagSet  targets  ──>  collect ──> JSON files
+pbfparser (pbf)        ───┘
 ```
 
-1. **`trustedPreloadFeed`** (`preload_trusted.go`) — started first, in its
-   own goroutine. Streams trusted postcode/city/street rows from
-   `preload.csv` into `targets` (no `uniform` normalization).
-2. **`preloadFeed`** (`preload.go`) — started after the trusted preload
-   finishes. Streams validated postcode/city pairs from the CSV into
-   `targets`.
-3. **`collect`** (`collect.go`) — spun up in its own goroutine before the\n   feeds; ranges over `targets` until
-   the channel is closed, building the in-memory place index and emitting
-   JSON. Single goroutine; all dedup/correction logic lives here.
-4. **`pbfparser`** (`parser.go`) — started only **after** `preload.Wait()`
-   returns. Decodes the PBF and pushes qualifying tag sets into `targets`.
+1. **`trustedPreloadFeed`** (`preload_trusted.go`) — runs first, synchronously.
+   Streams trusted postcode/city/street rows from `preload.csv` into
+   `targets` (no `uniform` normalization).
+2. **`preloadFeed`** (`preload.go`) — runs next, synchronously. Streams
+   validated postcode/city pairs from the CSV into `targets`.
+3. **`collect`** (`collect.go`) — the sole consumer of `targets`; started
+   first in its own goroutine, ranges over it until the channel is closed,
+   building the in-memory place index and emitting JSON. All
+   dedup/correction logic lives here.
+4. **`pbfparser`** (`parser.go`) — started only after both preloads finished.
+   Decodes the PBF and pushes qualifying tag sets into `targets`.
 5. After the parser finishes, `close(targets)` lets `collect` drain and exit.
 
-Ordering matters: preload must finish before the parser starts because both
-feed the same unbuffered `targets` channel and `collect` is the sole
-consumer. The channel is unbuffered; throughput depends on `collect`
-keeping up.
+Ordering matters: both preload feeds must finish before the parser starts,
+all producers share the same unbuffered `targets` channel and `collect` keeps
+it draining. `Parse` creates the channel locally; the package has **no
+package-level mutable state** (no global channels or WaitGroups), so every
+stage is independently testable.
 
 ### Concurrency
 
-- `core.go` declares **package-level** `sync.WaitGroup`s (`preload`,
-  `parser`, `collector`) and the `targets` channel. They are global state —
-  `Parse` is not safe to call concurrently or more than once per process.
-  Stages are launched via `sync.WaitGroup.Go` (Go 1.25+); the stage functions
-  no longer call `Done()` themselves.
+- `Parse` uses local `sync.WaitGroup`s (`parser`, `collector`), stages are
+  launched via `sync.WaitGroup.Go` (Go 1.25+). The preload feeds run
+  synchronously because their output must fully precede the parser's.
 - `Target.Worker` exists in the struct but is **unused** for parser
   parallelism; the PBF decoder parallelism is controlled separately inside
   `internal/pbf` via `runtime.GOMAXPROCS` (`DefaultNCpu` = max(GOMAXPROCS-1, 1)).
 - The PBF decoder uses `github.com/destel/rill` for pipelined
   blob→batch→object processing; the `rill.Discard` call in
-  `internal/pbf/decoder.go` drains the background pipeline on `Decoder.Close`.
+  `internal/pbf/decoder.go` drains the background pipeline on `Decoder.Close`,
+  and `NewDecoder` cancels its context when header loading fails.
 
 ### PBF decoding stack (`internal/`)
 
@@ -131,8 +130,7 @@ keeping up.
   Relation and Header cases are no-ops — the tool effectively only processes
   nodes with `addr:*` tags); the `default` case panics on truly unknown types.
 - `internal/pbf` — public `Decoder` over `internal/decoder`, configurable via
-  functional options (`WithProtoBufferSize`, `WithProtoBatchSize`,
-  `WithNCpus`). Default batch size 16, buffer 1 MiB.
+  functional options (`WithProtoBatchSize`, `WithNCpus`). Default batch size 16.
 - `internal/protobuf` — generated from `internal/protobuf/osm.proto`
   (`proto2`, `option go_package = "m4o.io/pbf/protobuf"` — note the
   go_package path is **stale** and does not match the actual import path).
@@ -148,8 +146,9 @@ keeping up.
 `uniform.go` dispatches by `t.Country`; only `"DE"` is implemented
 (`uniform_de.go`). Adding a new country means adding a `case` in
 `uniform.go` and a `uniform<CC>.go` file implementing the equivalent of
-`uniformDE`. The returned `int` is a **count of normalization failures**,
-not a success flag — it is accumulated into `OSM:PBF:Err:Uniform`.
+`uniformDE`. The returned `bool` is a **drop flag** — `true` means the entry
+is non-conform and must be discarded; drops are accumulated into
+`OSM:PBF:Err:Uniform`.
 
 DE normalization:
 - Rejects non-Latin1 city/street (reported and counted into
@@ -184,9 +183,13 @@ DE normalization:
 
 ## Output Files
 
-All written by `writeJsonFile` (`writer.go`) into `json/<COUNTRY_CODE>/`,
-created with `MkdirAll(0755)`, files `0644`, `json.MarshalIndent` with `\t`.
-Files are overwritten silently:
+All written by `writeJsonFile` (`writer.go`) as `writeJsonFile(base, country,
+filename, in)` into `<base>/<COUNTRY_CODE>/`, where the base defaults to
+`json` (relative to the process CWD). `Target.outBase()` resolves the base;
+the unexported `Target.outDir` field can override it (used by the test suite
+so tests never touch the repo `json/` tree and can run in parallel).
+Directories are created with `MkdirAll(0755)`, files are `0644`, marshaled via
+`json.MarshalIndent` with `\t`. Files are overwritten silently:
 
 | File | Source | Content |
 | --- | --- | --- |
@@ -199,6 +202,22 @@ Files are overwritten silently:
 
 `examples/json/DE/` contains sample outputs for reference; do not edit by
 hand — they are regenerated by `make -C examples`.
+
+## Testing
+
+- All tests live next to the source file they test (`parser_test.go`,
+  `collect_test.go`, …) and must be independently runnable.
+- Tests that need no global state call `t.Parallel()` (including subtests);
+  only the `debug_test.go` cases mutate the global `debug` var or use
+  `t.Setenv` and stay sequential. Parallel tests never overlap with
+  sequential ones in the same package run.
+- Tests never write into the repo tree: they use `t.TempDir()` and set the
+  unexported `Target.outDir` field instead of `t.Chdir` (which is
+  incompatible with parallel tests).
+- PBF coverage uses a tiny in-memory generated fixture (`parser_test.go::
+  writeTestPBF` builds a minimal two-blob PBF via `internal/protobuf`) —
+  never download or commit large extract files for tests.
+- Race detector: `CGO_ENABLED=1 go test -race -count=1 ./...`.
 
 ## Conventions & Gotchas
 
@@ -219,9 +238,7 @@ hand — they are regenerated by `make -C examples`.
   unexported. `cmd/osm2addr/main.go` is the reference consumer.
 - **`Target.PreLoad` field indices** are hardcoded in `checkPreloadFile`
   for the German CSV schema. Supporting a different preload schema requires
-  parameterizing `Fields`/`City`/`Postcode`/`PostcodeLenght` — note the
-  typo `Lenght` (sic) in the field name; do not "fix" it without renaming
-  every usage.
+  parameterizing `Fields`/`City`/`Postcode`/`PostcodeLength`.
 - **Debug logging**: set the `DEBUG` environment variable to any non-empty
   value (except `0`, `false`, `no`, `off`) to enable per-event
   `OSM:DEBUG:*` lines (`debug.go`).

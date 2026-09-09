@@ -18,12 +18,8 @@ import (
 	"runtime"
 )
 
-const (
-	// DefaultBufferSize is the default buffer size for protobuf un-marshaling.
-	DefaultBufferSize = 1024 * 1024
-	// DefaultBatchSize is the default batch size for unprocessed blobs.
-	DefaultBatchSize = 16
-)
+// DefaultBatchSize is the default batch size for unprocessed blobs.
+const DefaultBatchSize = 16
 
 // DefaultNCpu provides the default number of CPUs.
 func DefaultNCpu() uint16 {
@@ -33,20 +29,12 @@ func DefaultNCpu() uint16 {
 
 // decoderOptions provides optional configuration parameters for Decoder construction.
 type decoderOptions struct {
-	protoBufferSize int    // buffer size for protobuf un-marshaling
-	protoBatchSize  int    // batch size for protobuf un-marshaling
-	nCPU            uint16 // the number of CPUs to use for background processing
+	protoBatchSize int    // batch size for protobuf un-marshaling
+	nCPU           uint16 // the number of CPUs to use for background processing
 }
 
 // DecoderOption configures how we set up the decoder.
 type DecoderOption func(*decoderOptions)
-
-// WithProtoBufferSize lets you set the buffer size for protobuf un-marshaling.
-func WithProtoBufferSize(s int) DecoderOption {
-	return func(o *decoderOptions) {
-		o.protoBufferSize = s
-	}
-}
 
 // WithProtoBatchSize lets you set the buffer size for protobuf un-marshaling.
 func WithProtoBatchSize(s int) DecoderOption {
@@ -64,7 +52,6 @@ func WithNCpus(n uint16) DecoderOption {
 
 // defaultDecoderConfig provides a default configuration for decoders.
 var defaultDecoderConfig = decoderOptions{
-	protoBufferSize: DefaultBufferSize,
-	protoBatchSize:  DefaultBatchSize,
-	nCPU:            DefaultNCpu(),
+	protoBatchSize: DefaultBatchSize,
+	nCPU:           DefaultNCpu(),
 }

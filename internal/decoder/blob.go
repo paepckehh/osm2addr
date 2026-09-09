@@ -173,7 +173,7 @@ func extract(header *protobuf.BlobHeader, blob *protobuf.Blob) ([]model.Object, 
 	default:
 		return nil, errors.New("unknown blob data type")
 	}
-	ht := *header.Type
+	ht := header.GetType()
 	switch ht {
 	case "OSMHeader":
 		{

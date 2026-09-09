@@ -8,7 +8,7 @@ import (
 )
 
 // collect ...
-func collect(target *Target) {
+func collect(target *Target, targets <-chan *tagSet) {
 
 	// init
 	warning, warningCounter := make(map[string]int), 0
@@ -69,6 +69,10 @@ func collect(target *Target) {
 				places[t.Postcode][t.City] = make(map[street]placeIdHex)
 				places2[t.Postcode][t.City] = make(map[street]bool)
 				for ci := range places[t.Postcode] {
+					if ci == t.City {
+						// the new city itself was just seeded above
+						continue
+					}
 					distance := levenshtein.ComputeDistance(string(ci), string(t.City))
 					if distance < 2 {
 						e := fmt.Sprintf("[WARNING][LEVENSHTEIN:%v][POSTCODE:%v][CITY]#%v#%v#", distance, t.Postcode, ci, t.City)
@@ -107,9 +111,9 @@ func collect(target *Target) {
 	for pid, tset := range placeIDs {
 		p[string(pid.hex())] = tset
 	}
-	writeJsonFile(target.Country, "addr.json", places2)
-	writeJsonFile(target.Country, "addr2placeID.json", places)
-	writeJsonFile(target.Country, "placeID2addr.json", p)
-	writeJsonFile(target.Country, "warning.json", warning)
-	writeJsonFile(target.Country, "corrected.json", corrected)
+	writeJsonFile(target.outBase(), target.Country, "addr.json", places2)
+	writeJsonFile(target.outBase(), target.Country, "addr2placeID.json", places)
+	writeJsonFile(target.outBase(), target.Country, "placeID2addr.json", p)
+	writeJsonFile(target.outBase(), target.Country, "warning.json", warning)
+	writeJsonFile(target.outBase(), target.Country, "corrected.json", corrected)
 }
