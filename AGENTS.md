@@ -16,6 +16,9 @@ Guidance for AI agents working in the `paepcke.de/osm2addr` repository.
 >
 > These steps are non-negotiable for every single task regardless of size.
 > Do not ask, just perform
+>
+> When build unit tests when possible, ensure unit test are run in parallel and fast.
+> Use for unit test only small sample size data.
 
 ## Overview 
 
