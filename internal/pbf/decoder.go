@@ -48,7 +48,7 @@ func NewDecoder(ctx context.Context, rdr io.Reader, opts ...DecoderOption) (*Dec
 	d.Header = hdr
 	d.cancel = cancel
 	blobs := rill.FromSeq2(decoder.Generate(ctx, rdr))
-	batches := rill.Batch(blobs, cfg.protoBatchSize, time.Second)
+	batches := rill.Batch(blobs, max(cfg.protoBatchSize, 1), time.Second)
 	objects := rill.FlatMap(batches, max(int(cfg.nCPU), 1), decoder.Decode)
 	d.Objects = objects
 	return d, nil
@@ -68,6 +68,6 @@ func (d *Decoder) Decode() ([]model.Object, error) {
 
 // Close will cancel the background decoding pipeline.
 func (d *Decoder) Close() {
-	rill.Discard(d.Objects)
 	d.cancel()
+	rill.Discard(d.Objects)
 }

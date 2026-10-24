@@ -72,7 +72,7 @@ func (c *blockContext) decodeTags(keyIDs, valIDs []uint32) map[string]string {
 		return tags
 	}
 	for i, keyID := range keyIDs {
-		tags[c.strings[keyID]] = c.strings[valIDs[i]]
+		tags[strAt(c.strings, int(keyID))] = strAt(c.strings, int(valIDs[i]))
 	}
 	return tags
 }
@@ -85,7 +85,7 @@ func (c *blockContext) decodeInfo(info *protobuf.Info) *model.Info {
 		i.Changeset = info.GetChangeset()
 		i.UID = model.UID(info.GetUid())
 
-		i.User = c.strings[info.GetUserSid()]
+		i.User = strAt(c.strings, int(info.GetUserSid()))
 
 		if info.Visible != nil {
 			i.Visible = info.GetVisible()
@@ -161,7 +161,7 @@ func (dic *denseInfoContext) decodeInfo(i int) *model.Info {
 	}
 	if i < len(dic.userSids) {
 		dic.userSid += dic.userSids[i]
-		info.User = dic.strings[dic.userSid]
+		info.User = strAt(dic.strings, int(dic.userSid))
 	}
 	if i < len(dic.visibilities) {
 		info.Visible = dic.visibilities[i]
@@ -183,11 +183,20 @@ func (tic *tagsContext) decodeTags() map[string]string {
 	tags := map[string]string{}
 	i := tic.i
 	for i+1 < len(tic.keyVals) && tic.keyVals[i] > 0 {
-		tags[tic.strings[tic.keyVals[i]]] = tic.strings[tic.keyVals[i+1]]
+		tags[strAt(tic.strings, int(tic.keyVals[i]))] = strAt(tic.strings, int(tic.keyVals[i+1]))
 		i += 2
 	}
 	tic.i = i + 1
 	return tags
+}
+
+// strAt returns the string table entry at i, or "" when a malformed block
+// references an index outside the table.
+func strAt(table []string, i int) string {
+	if i < 0 || i >= len(table) {
+		return ""
+	}
+	return table[i]
 }
 
 // toTimestamp converts a timestamp with a specific granularity, in units of

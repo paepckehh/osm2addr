@@ -24,7 +24,6 @@ func main() {
 
 	// setup defaults
 	target := &osm2addr.Target{
-		Worker:   1, // runtime.NumCPU()
 		Country:  "DE",
 		FileName: "data/germany-latest.osm.pbf",
 	}
@@ -32,7 +31,7 @@ func main() {
 	// parse commandline options
 	if len(os.Args) > 1 {
 		if len(os.Args[1]) != 2 {
-			log.Fatal("[OSM2ADDR][ERROR][FATAL] Target Country Code, if specified, must be two digits (example: osm2addr DE)")
+			log.Fatal("[OSM2ADDR][ERROR][FATAL] Target Country Code, if specified, must be two characters (example: osm2addr DE)")
 		}
 		target.Country = strings.ToUpper(os.Args[1])
 	}
@@ -44,7 +43,6 @@ func main() {
 	fmt.Printf("\nOSM:Version              # osm2addr %s (commit %s, built %s)", version, commit, buildtime)
 	fmt.Printf("\nOSM:Startup               # %v", ts)
 	fmt.Printf("\nOSM:TargetCountry         # %v", target.Country)
-	fmt.Printf("\nOSM:WorkerScale           # %v", target.Worker)
 	fmt.Printf("\nOSM:Debug                 # %v", osm2addr.DebugEnabled())
 	fmt.Printf("\nOSM:File                  # %v", target.FileName)
 

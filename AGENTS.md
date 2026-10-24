@@ -64,7 +64,9 @@ field count, stray quote) — are counted into
 feeds the same `targets` channel
 as the PBF parser, so its entries participate in dedup and place-ID
 generation. If the preload file is missing, the run proceeds without it
-(`OSM:PreLoadFile # n/a`).
+(`OSM:PreLoadFile # n/a`). A path that opens but is not a regular file (for
+example a directory) is rejected up front, because `csv.Reader` would error
+on every read without ever reaching `io.EOF`.
 
 ### Trusted preload.csv (optional)
 
@@ -75,7 +77,8 @@ header whose separator is auto-detected (`,` assumed by default; `;`, tab,
 `|` detected) and which contains the exact field names `POSTLEITZAHL`,
 `ORT_NAME` and `STRASSE_NAME`. If confirmed, the rows are fed into `targets`
 **first** as trusted postcode/city/street values: `uniform` normalization is
-deliberately skipped and no matching is attempted. Malformed rows are counted
+deliberately skipped and no matching is attempted. Malformed rows, fields
+with an empty postcode or city, are counted
 into `json/<CC>/error.preload.trusted.json`. Order in `core.go::Parse`:
 collector → trusted preload (wait) → validated preload (wait) → PBF parser.
 
@@ -113,18 +116,20 @@ stage is independently testable.
 - `Parse` uses local `sync.WaitGroup`s (`parser`, `collector`), stages are
   launched via `sync.WaitGroup.Go` (Go 1.25+). The preload feeds run
   synchronously because their output must fully precede the parser's.
-- `Target.Worker` exists in the struct but is **unused** for parser
-  parallelism; the PBF decoder parallelism is controlled separately inside
-  `internal/pbf` via `runtime.GOMAXPROCS` (`DefaultNCpu` = max(GOMAXPROCS-1, 1)).
+- `Target` has no worker field; the PBF decoder parallelism is controlled
+  inside `internal/pbf` via `runtime.GOMAXPROCS`
+  (`DefaultNCpu` = max(GOMAXPROCS-1, 1)).
 - The PBF decoder uses `github.com/destel/rill` for pipelined
-  blob→batch→object processing; the `rill.Discard` call in
-  `internal/pbf/decoder.go` drains the background pipeline on `Decoder.Close`,
-  and `NewDecoder` cancels its context when header loading fails.
+  blob→batch→object processing; `Decoder.Close` cancels the context first and
+  then calls `rill.Discard` to stop (not drain) the background pipeline, and
+  `NewDecoder` cancels its context when header loading fails.
 
 ### PBF decoding stack (`internal/`)
 
 - `internal/decoder` — low-level PBF blob/header parsing; converts
-  `PrimitiveBlock`s into `model.Object`s. Note: only **Nodes** and
+  `PrimitiveBlock`s into `model.Object`s. String table lookups go through
+  `strAt`, which returns `""` for out-of-range indices so a malformed block
+  cannot panic the decoder. Note: only **Nodes** and
   **DenseNodes** are decoded into elements; `parser.go` switches on
   `*model.Node`, `*model.Way`, `*model.Relation`, `*model.Header` (Way,
   Relation and Header cases are no-ops — the tool effectively only processes
@@ -155,11 +160,14 @@ DE normalization:
   `OSM:PBF:Err:Uniform`).
 - Parses postcode as int; pads 4-digit postcodes with a leading `0`,
   rejects anything else as failure.
-- `tryNormStreetDE` canonicalizes `Strasse`/`Str.`/`strasse`/`str.` →
-  `Straße`/`straße`. Order of replacements is significant.
+- `tryNormStreetDE` trims surrounding space and canonicalizes
+  `Strasse`/`Str.`/`strasse`/`str.` → `Straße`/`straße` without inserting a
+  space inside a word (`Hauptstr.` → `Hauptstraße`). Order of replacements is
+  significant.
 - `tryNormCityDE` expands abbreviations (`a.d.` → `an der`, `i.` → `in`,
   `b.` → `bei`, etc.), fixes common typos (`in Isartal` → `im Isartal`,
-  `/ Saale` → `/Saale`), then `camelCaseCityDE` title-cases words while
+  `/ Saale` → `/Saale`), collapses whitespace, then `camelCaseCityDE`
+  title-cases words while
   preserving a hardcoded list of lowercase particles (`an`, `am`, `der`,
   `in`, `von`, …) and uppercasing `ii`→`II`, `ot`→`OT`, `nb`→`NB`, etc.
   Particles are matched on the **lowercased** token, so any new exception
@@ -168,15 +176,20 @@ DE normalization:
 ## Place ID & Dedup
 
 - `id(in)` (`helper.go`) = first 12 bytes of `sha256(in + _secretMAC)` where
-  `_secretMAC` is a hardcoded constant. The place ID is the
-  `country+postcode+city+street` concatenation. **IDs are not stable across
-  versions if the secret changes**; the secret is committed in the clear —
+  `_secretMAC` is a hardcoded constant. `tagSet.placeID()`
+  (`core.go`) builds the input as `country\x00postcode\x00city\x00street`, so
+  moving characters between city and street cannot collide. **IDs are not
+  stable across versions if the secret or the key format changes**; the secret
+  is committed in the clear —
   do not treat it as confidential, but be aware changing it invalidates all
   previously generated mapping tables.
 - `collect.go` dedups by `placeID` first, then by nested
   `postcode→city→street` maps. It also performs auto-correction for cities
   that differ only by separator (` `, `-`) against an existing entry, and
   emits Levenshtein-distance<2 warnings to `warning.json` (not corrections).
+  Entries marked `Preloaded: false` also produce a
+  `NON-PRELOADED-POSTCODE-CITY-ADDED` warning whenever they introduce a new
+  postcode/city pair (not only a new postcode).
 - Three parallel index structures are maintained in `collect`:
   `placeIDs` (placeID→tagSet), `places` (postcode→city→street→placeIdHex),
   `places2` (postcode→city→street→bool, written as `addr.json`).
@@ -217,7 +230,10 @@ hand — they are regenerated by `make -C examples`.
 - PBF coverage uses a tiny in-memory generated fixture (`parser_test.go::
   writeTestPBF` builds a minimal two-blob PBF via `internal/protobuf`) —
   never download or commit large extract files for tests.
-- Race detector: `CGO_ENABLED=1 go test -race -count=1 ./...`.
+- `internal/decoder/elements_test.go` covers the string table bounds helper
+  and malformed tag indices; there is no full PBF fixture for the internal
+  packages, so keep decoder hardening tests focused on pure helpers.
+- Race detector: `CGO_ENABLED=1 go test -race -count=1 ./...` (`make test`).
 
 ## Conventions & Gotchas
 
@@ -262,6 +278,10 @@ hand — they are regenerated by `make -C examples`.
 
 - The `secret` in `_secretMAC` is not configurable via CLI; changing it
   requires a recompile and invalidates downstream mapping tables.
+- `tagSet.placeID()` joined its fields with a NUL for the first time in
+  v0.0.36. All place IDs generated before that release differ, so committed
+  `examples/json/DE/` samples may predate the change until regenerated with
+  `make -C examples`.
 - The protobuf `go_package` option in `osm.proto` says `m4o.io/pbf/protobuf`
   — this is a leftover from upstream and does **not** match the actual
   import path `paepcke.de/osm2addr/internal/protobuf`. Regenerating the

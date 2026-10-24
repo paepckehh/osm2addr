@@ -92,6 +92,15 @@ func (target *Target) checkPreloadFile() bool {
 	// open file handle
 	target.PreLoad.File, err = os.Open(target.PreLoad.Filename)
 	if err == nil {
+		// a directory or device would make csv.Reader fail on every read
+		// without ever reaching io.EOF
+		if info, statErr := target.PreLoad.File.Stat(); statErr != nil || !info.Mode().IsRegular() {
+			_ = target.PreLoad.File.Close()
+			target.PreLoad.File = nil
+			target.PreLoad.Filename += " [ERROR][NOT-A-REGULAR-FILE]"
+			fmt.Printf("\nOSM:PreLoadFile:Error     # %v", target.PreLoad.Filename)
+			return false
+		}
 		// define preload csv defaults
 		target.PreLoad.Fields = 6
 		target.PreLoad.City = 2

@@ -155,6 +155,11 @@ func extract(header *protobuf.BlobHeader, blob *protobuf.Blob) ([]model.Object, 
 		if err != nil {
 			return nil, err
 		}
+		defer func() {
+			if err := r.Close(); err != nil {
+				fmt.Printf("[OSM2ADDR][ERROR] zlib close: %v", err)
+			}
+		}()
 		zlibBuf.Reset()
 		rawBufferSize := int(blob.GetRawSize() + bytes.MinRead)
 		if rawBufferSize > zlibBuf.Cap() {

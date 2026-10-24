@@ -127,3 +127,19 @@ func TestCheckPreloadFileMissing(t *testing.T) {
 		t.Errorf("unexpected filename: %v", target.PreLoad.Filename)
 	}
 }
+
+func TestCheckPreloadFileNotRegular(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "validated-preload", "DE.csv"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	target := &Target{Country: "DE", FileName: filepath.Join(dir, "germany.pbf")}
+	if target.checkPreloadFile() {
+		t.Error("a directory must not be accepted as preload csv")
+	}
+	if target.PreLoad.File != nil {
+		t.Error("no file handle must be kept for non-regular files")
+	}
+}

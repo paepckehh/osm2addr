@@ -7,7 +7,6 @@ import (
 
 // Target ...
 type Target struct {
-	Worker   int
 	Country  string
 	File     *os.File
 	FileName string
@@ -55,6 +54,12 @@ func (t *Target) outBase() string {
 		return t.outDir
 	}
 	return "json"
+}
+
+// placeID returns the deterministic id of a place. The fields are NUL
+// separated so moving characters between city and street cannot collide.
+func (t *tagSet) placeID() placeID {
+	return id(string(t.Country) + "\x00" + string(t.Postcode) + "\x00" + string(t.City) + "\x00" + string(t.Street))
 }
 
 // Parse input files

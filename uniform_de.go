@@ -53,12 +53,12 @@ func (t *tagSet) uniformDE() bool {
 
 // tryNormStreetDE ...
 func tryNormStreetDE(in street) street {
-	s := string(in)
+	s := strings.TrimSpace(string(in))
 	s = strings.ReplaceAll(s, "Strasse", "Straße")
 	s = strings.ReplaceAll(s, "Str.", "Straße")
 	s = strings.ReplaceAll(s, " str.", " Straße")
 	s = strings.ReplaceAll(s, " strasse", " Straße")
-	s = strings.ReplaceAll(s, "str.", " straße")
+	s = strings.ReplaceAll(s, "str.", "straße")
 	s = strings.ReplaceAll(s, "strasse", "straße")
 	if street(s) != in {
 		dbg("Norm:[Street][DE]%v =====> %v", in, s)
@@ -72,6 +72,7 @@ func tryNormCityDE(in city) city {
 	if strings.Contains(s, ".") {
 		s = tryNormCityDEShortcut(s)
 	}
+	s = strings.Join(strings.Fields(s), " ")
 	s = camelCaseCityDE(s)
 	s = tryNormCityDETypo(s)
 	if s != string(in) {

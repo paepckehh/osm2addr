@@ -66,7 +66,7 @@ func TestTryNormStreetDE(t *testing.T) {
 		in, want string
 	}{
 		{"Hauptstrasse", "Hauptstraße"},
-		{"Hauptstr.", "Haupt straße"},
+		{"Hauptstr.", "Hauptstraße"},
 		{"Test Strasse", "Test Straße"},
 		{"Test Str.", "Test Straße"},
 		{"test strasse", "test Straße"},
@@ -95,6 +95,9 @@ func TestTryNormCityDE(t *testing.T) {
 		{"berlin", "Berlin"},
 		{"Köln", "Köln"},
 		{"bad homburg v.d. höhe", "Bad Homburg vor der Höhe"},
+		{"bad a.d.isar", "Bad an der Isar"},
+		{"frankfurt a.d.", "Frankfurt an der"},
+		{"  berlin  ", "Berlin"},
 	}
 	for _, c := range cases {
 		t.Run(c.in, func(t *testing.T) {

@@ -10,7 +10,6 @@ go run paepcke.de/osm2addr/cmd/osm2addr@latest DE data/germany-latest.osm.pbf
 OSM:Version              # osm2addr dev (commit none, built unknown)
 OSM:Startup               # 2025-03-10 07:44:58.79476069 +0000 UTC m=+0.000533658
 OSM:TargetCountry         # DE
-OSM:WorkerScale           # 1
 OSM:Debug                 # false
 OSM:File                  # data/germany-latest.osm.pbf
 ----------------------------------------------------------------------------------

@@ -91,6 +91,42 @@ func TestTrustedPreloadFeedMissing(t *testing.T) {
 	}
 }
 
+func TestTrustedPreloadFeedEmptyFields(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	csvData := "POSTLEITZAHL;ORT_NAME;STRASSE_NAME\n" +
+		";Berlin;Hauptstrasse\n" +
+		"10115;;Hauptstrasse\n" +
+		"10115;Berlin;Hauptstrasse\n"
+	if err := os.WriteFile(filepath.Join(dir, "preload.csv"), []byte(csvData), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	target := &Target{Country: "DE", FileName: filepath.Join(dir, "germany.pbf"), outDir: dir}
+	if !target.checkTrustedPreloadFile() {
+		t.Fatal("trusted preload file must be detected")
+	}
+
+	targets := make(chan *tagSet, 4)
+	target.trustedPreloadFeed(targets)
+	close(targets)
+
+	var got []*tagSet
+	for ts := range targets {
+		got = append(got, ts)
+	}
+	if len(got) != 1 || got[0].Street != "Hauptstrasse" {
+		t.Fatalf("expected exactly one complete entry, got %v", got)
+	}
+
+	var fail map[string]int
+	readJson(t, filepath.Join(dir, "DE", "error.preload.trusted.json"), &fail)
+	if len(fail) != 2 {
+		t.Errorf("expected two empty-field failures, got %v", fail)
+	}
+}
+
 func TestTrustedPreloadHeader(t *testing.T) {
 	t.Parallel()
 

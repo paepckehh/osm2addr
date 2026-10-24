@@ -113,6 +113,15 @@ func TestCamelCaseSeps(t *testing.T) {
 	}
 }
 
+func TestPlaceIDNoCityStreetCollision(t *testing.T) {
+	t.Parallel()
+	a := &tagSet{Country: "DE", Postcode: "10115", City: "Bad", Street: "Homburgx"}
+	b := &tagSet{Country: "DE", Postcode: "10115", City: "BadHomburg", Street: "x"}
+	if a.placeID() == b.placeID() {
+		t.Error("shifting characters between city and street must not collide")
+	}
+}
+
 func TestHu(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

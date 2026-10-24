@@ -76,8 +76,11 @@ func TestCollect(t *testing.T) {
 
 	var warning map[string]int
 	readJson(t, filepath.Join(dir, "DE", "warning.json"), &warning)
-	if len(warning) != 2 {
-		t.Errorf("expected two warning cases, got %v", warning)
+	if len(warning) != 3 {
+		t.Errorf("expected three warning cases, got %v", warning)
+	}
+	if warning["[WARNING][NON-PRELOADED-POSTCODE-CITY-ADDED][POSTCODE:10115][CITY:Berlino]"] != 1 {
+		t.Errorf("non-preloaded city under a known postcode must be warned, got %v", warning)
 	}
 }
 

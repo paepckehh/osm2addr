@@ -1,4 +1,13 @@
-# osm2addr
+<div align="center">
+
+# 🗺️ osm2addr
+
+**One PBF in. Clean postal-address tables out.**
+
+Turn an OpenStreetMap extract into deduplicated, normalized
+`postcode → city → street` mapping tables — deterministic place IDs,
+auto-corrected city names, and a warning feed for everything that does not
+look like official postal data.
 
 [![Go Reference](https://pkg.go.dev/badge/paepcke.de/osm2addr.svg)](https://pkg.go.dev/paepcke.de/osm2addr)
 [![Go Report Card](https://goreportcard.com/badge/paepcke.de/osm2addr)](https://goreportcard.com/report/paepcke.de/osm2addr)
@@ -8,103 +17,145 @@
 [![SemVer](https://img.shields.io/github/v/release/paepckehh/osm2addr)](https://github.com/paepckehh/osm2addr/releases/latest)
 [![built with nix](https://builtwithnix.org/badge.svg)](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=osm2addr)
 
-`osm2addr` parses [OpenStreetMap](https://www.openstreetmap.org/) PBF extract
-files and emits normalized, postal-address mapping tables (JSON) keyed by a
-deterministic place ID. It is optimized for the German (`DE`) address dataset,
-but the architecture is country-aware via the `uniform` dispatch and can be
-extended by adding a per-country normalizer. The output is intended to feed
-address validation databases (MongoDB, etc.).
+`go run paepcke.de/osm2addr/cmd/osm2addr@latest`
 
-## Table of contents
+</div>
 
-- [Features](#features)
-- [Install](#install)
-- [Quickstart](#quickstart)
-- [Usage](#usage)
-- [Preload data](#preload-data)
-- [Output files](#output-files)
-- [Architecture](#architecture)
-- [Development](#development)
-- [License](#license)
+---
 
-## Features
+## 💡 Why
 
-- **Fast** — extracts, analyzes and normalizes around 400.000.000 OSM nodes
-  in under 50 sec on a consumer laptop.
-- **Deduplicated** — every place (postcode + city + street) is stored exactly
-  once, keyed by a deterministic SHA-256-derived place ID.
-- **Normalized** — country-specific canonicalization of street names, city
-  names, abbreviations and postcodes (German `DE` implemented; extensible).
-- **Auto-correction** — cities that differ only by separator choice
-  (`Bad Homburg` vs `Bad-Homburg`) are collapsed automatically; near-duplicate
-  city names within the same postcode (Levenshtein distance < 2) are flagged.
-- **Preload support** — optional validated and trusted CSV inputs pre-seed the
-  place index so non-preloaded entries are surfaced as warnings.
-- **Offline** — no dependency on external services; runs fully offline against
-  a local `.osm.pbf` file.
-- **Tested** — parallel, self-contained unit tests with tiny in-memory
-  fixtures (including a minimal generated PBF file), runnable with
-  `go test ./...` in milliseconds.
+Address validation databases want the boring part of OpenStreetMap: *this
+postcode belongs to this city, and this is the list of streets in it*. They do
+not want 400 million nodes, duplicate nodes with the same address, or
+`Hauptstr.` next to `Hauptstraße`.
 
-## Install
+`osm2addr` reads a `.osm.pbf` extract, keeps only complete `addr:*` nodes,
+normalizes them per country, deduplicates by a deterministic place ID and emits
+small JSON tables you can import directly into MongoDB, PostgreSQL, SQLite or
+whatever your validator uses.
 
-```
+Measured on a consumer laptop: roughly **400 million nodes in under 50
+seconds**, single binary, no network access.
+
+## ✨ Features
+
+- ⚡ **Fast** — pipelined PBF decoding (`rill`), blob → batch → object, parallel
+  by default.
+- 🧼 **Normalized** — country-aware canonicalization of streets, cities,
+  abbreviations and postcodes. German (`DE`) is implemented; adding a country
+  is one dispatch case and one file.
+- 🎯 **Deterministic place IDs** — 96-bit SHA-256 prefix of the normalized
+  place, so the same address always maps to the same ID.
+- 🧠 **Auto-correction** — `Bad Homburg` and `Bad-Homburg` collapse into one
+  city; near-duplicate city spellings are flagged by Levenshtein distance.
+- 🧾 **Warnings, not crashes** — non-preloaded postcodes, preload length
+  errors, bad CSV rows and normalization drops are counted into JSON error
+  files. The run never aborts on a single bad record.
+- 📥 **Two preload feeds** — an optional validated postcode/city CSV, plus a
+  trusted street-level `preload.csv` (header auto-detected) that seeds the
+  index before OSM data.
+- 🔌 **App *and* library** — the CLI is a thin wrapper around
+  `osm2addr.Parse`; every stage is testable in isolation.
+- 🪶 **Pure Go, tiny deps** — `CGO_ENABLED=0`, static binaries for
+  linux/freebsd/darwin/netbsd/openbsd/windows, amd64 and arm64.
+- 🧪 **Fast tests** — parallel, self-contained, with a tiny generated PBF
+  fixture. `go test ./...` finishes in milliseconds.
+
+## 🚀 Install
+
+**Go** (any platform with a toolchain):
+
+```shell
 go install paepcke.de/osm2addr/cmd/osm2addr@latest
 ```
 
-Or build from source:
+**No toolchain? Run it straight away:**
 
-```
-git clone https://github.com/paepckehh/osm2addr
-cd osm2addr
-make build
-```
-
-## Quickstart
-
-```
-mkdir -p data
-curl --output data/germany-latest.osm.pbf https://download.geofabrik.de/europe/germany-latest.osm.pbf
+```shell
 go run paepcke.de/osm2addr/cmd/osm2addr@latest DE data/germany-latest.osm.pbf
 ```
 
-## Usage
+**Pre-built binaries:**
 
+→ [github.com/paepckehh/osm2addr/releases/latest](https://github.com/paepckehh/osm2addr/releases/latest)
+
+**NixOS / nix:**
+
+```shell
+nix-shell -p osm2addr
 ```
+
+## 🎬 Quickstart
+
+```shell
+mkdir -p data
+curl --location --output data/germany-latest.osm.pbf \
+  https://download.geofabrik.de/europe/germany-latest.osm.pbf
+
+osm2addr DE data/germany-latest.osm.pbf
+```
+
+Output lands in `./json/DE/`:
+
+```text
+json/DE/addr.json             postcode → city → street → true
+json/DE/addr2placeID.json     postcode → city → street → place ID
+json/DE/placeID2addr.json     place ID → {country, postcode, city, street}
+json/DE/warning.json          near-duplicates and non-preloaded pairs
+json/DE/corrected.json        auto-corrected city separators
+```
+
+Or use the Makefile shortcuts:
+
+```shell
+make update-de     # download the Germany extract into data/
+make build         # build ./osm2addr
+make run           # build and run with defaults
+make test          # race-enabled test suite
+```
+
+## 🎛 Usage
+
+```text
 osm2addr [<COUNTRY_CODE> [<PATH_TO_PBF>]]
 ```
 
 | Argument | Description | Default |
 | --- | --- | --- |
-| `COUNTRY_CODE` | Exactly 2 characters, uppercased internally (example: `DE`) | `DE` |
-| `PATH_TO_PBF` | Path to an OSM PBF extract, relative to the process CWD | `data/germany-latest.osm.pbf` |
+| `COUNTRY_CODE` | Exactly 2 characters, uppercased internally (e.g. `DE`) | `DE` |
+| `PATH_TO_PBF` | OSM PBF extract, relative to the process CWD | `data/germany-latest.osm.pbf` |
 
-### Verbose logging
+Output is always written to `json/<COUNTRY_CODE>/` relative to the process
+CWD, never next to the binary.
 
-Set the `DEBUG` environment variable to any non-empty value (except `0`,
-`false`, `no`, `off`) to enable per-event debug logging:
+### 🐞 Debug logging
 
-```
+Set `DEBUG` to any non-empty value except `0`, `false`, `no`, `off`:
+
+```shell
 DEBUG=1 osm2addr DE data/germany-latest.osm.pbf
 ```
 
-### Sample output
+Every dropped, corrected or added record becomes an `OSM:DEBUG:*` line.
 
-```
-OSM:Version              # osm2addr dev (commit none, built unknown)
-OSM:Startup               # 2025-03-10 09:23:45.921159027 +0000 UTC m=+0.000386754
+### 📊 Sample run
+
+```text
+OSM:Version              # osm2addr v0.0.36 (commit deadbeef, built 2026-10-24T00:00:00Z)
+OSM:Startup               # 2026-10-24 09:23:45 +0000 UTC m=+0.000386754
 OSM:TargetCountry         # DE
 OSM:Debug                 # false
 OSM:File                  # data/germany-latest.osm.pbf
 ----------------------------------------------------------------------------------
 OSM:PreLoadFile           # data/validated-preload/DE.csv
-OSM:PreLoadFile:Fail      # 1
-OSM:PreLoadFile:Total     # 12853
+OSM:PreLoadFile:Fail      #           1
+OSM:PreLoadFile:Total     #      12.853
 OSM:Writer:JSON           # json/DE/error.preload.json
 ----------------------------------------------------------------------------------
 OSM:PBF:File:URL          # https://download.geofabrik.de/europe/germany-updates
 OSM:PBF:File:Repl:USM     # 4330
-OSM:PBF:File:Repl:TS      # 2025-02-13 21:21:14 +0000 UTC
+OSM:PBF:File:Repl:TS      # 2026-10-20 21:21:14 +0000 UTC
 ----------------------------------------------------------------------------------
 OSM:PBF:Parsed:Objects    # 411.113.874
 OSM:PBF:Parsed:Tags       #  71.720.811
@@ -135,134 +186,183 @@ OSM:Writer:JSON           # json/DE/corrected.json
 OSM:Time:Total            # 45.329429572s
 ```
 
-## Preload data
+## 📥 Preload data
 
-### Validated preload CSV (optional, expected for `DE`)
+Preloads are optional. They pre-seed the place index so that OSM data can be
+checked against a known-good address list.
 
-If a file exists at `<dirname of PBF>/validated-preload/<COUNTRY_CODE>.csv`, it
-is parsed as a comma-separated CSV with **6 fields per record**, a header row
-(skipped), and fixed column indices:
+### Validated preload CSV (expected for `DE`)
 
-| Field    | Column |
-| ---      | ---    |
-| City     | 2      |
-| Postcode | 3      |
+Place the file at `<dirname of PBF>/validated-preload/<COUNTRY_CODE>.csv`:
 
-Expected postcode length is **5** (German). Records failing length checks —
-and CSV rows that fail to parse (e.g. wrong field count, stray quote) — are
-counted into `json/<CC>/error.preload.json` instead of aborting the run. The
-preload entries participate in dedup and place-ID generation like any other
-input.
+- comma separated, **6 fields per record**, header row skipped;
+- city in column **2**, postcode in column **3**;
+- postcode must be 5 characters (German).
 
-### Trusted preload CSV (optional)
+Rows with the wrong field count, bad quoting or failing length checks are
+counted into `json/<CC>/error.preload.json`. Their entries take part in
+dedup and place-ID generation like OSM data.
 
-If a file named `preload.csv` exists at program start (next to the PBF file,
-or in the process working directory as fallback), it is loaded as trusted
-start values before any other input:
+### Trusted preload.csv
 
-- The first line is assumed to be a valid CSV header; the separator is
-  detected from the header line (`,` is the assumed default; `;`, tab and `|`
-  are detected), a UTF-8 BOM is stripped and UTF-8 encoding is confirmed.
-- The header must contain the exact field names `POSTLEITZAHL`, `ORT_NAME`
-  and `STRASSE_NAME`. If any of them is missing, the file is rejected.
-- Its rows are fed into the pipeline **first** and are treated as trusted
-  postcode/city/street values: no country-specific normalization or matching
-  is applied. They pre-seed all place index arrays before the OSM import data
-  is processed in the usual way.
-- Rows that fail CSV parsing are counted into
-  `json/<CC>/error.preload.trusted.json` instead of aborting the run.
+A file named `preload.csv` next to the PBF (process CWD as fallback) is loaded
+**before** everything else:
 
-## Output files
+- the first line is the header; the separator is detected (`,` default,
+  `;`, tab and `|` supported), a UTF-8 BOM is stripped and UTF-8 is verified;
+- the header must contain the exact names `POSTLEITZAHL`, `ORT_NAME` and
+  `STRASSE_NAME`, in any order;
+- rows are trusted street-level values: **no** normalization and no matching;
+- rows with an empty postcode or city, or broken CSV, are counted into
+  `json/<CC>/error.preload.trusted.json`.
 
-All JSON files are written to `json/<COUNTRY_CODE>/` (relative to the process
-CWD) with tab indentation and `0644` permissions; existing files are
+## 📤 Output files
+
+All files are written into `json/<COUNTRY_CODE>/`, tab-indented, `0644`,
 overwritten silently.
 
 | File | Content |
 | --- | --- |
-| `addr.json` | `postcode` → `city` → `street` → `true` |
-| `addr2placeID.json` | `postcode` → `city` → `street` → hex place ID |
-| `placeID2addr.json` | hex place ID → `{country, postcode, city, street}` |
-| `warning.json` | message → count (Levenshtein near-duplicates + non-preloaded postcode/city) |
+| `addr.json` | `postcode → city → street → true` |
+| `addr2placeID.json` | `postcode → city → street → hex place ID` |
+| `placeID2addr.json` | `hex place ID → {country, postcode, city, street}` |
+| `warning.json` | message → count (Levenshtein near-duplicates, non-preloaded postcode/city) |
 | `corrected.json` | message → count (auto-corrected city separators) |
-| `error.preload.json` | message → count (preload CSV length errors) |
-| `error.preload.trusted.json` | message → count (trusted preload.csv CSV parse errors) |
+| `error.preload.json` | message → count (validated preload row errors) |
+| `error.preload.trusted.json` | message → count (trusted preload row errors) |
 
-### Place ID
+### 🆔 Place ID
 
-A place ID is the first 12 bytes of `sha256(country + postcode + city + street
-+ secretMAC)`, hex-encoded. IDs are deterministic but **not stable across
-versions if the secret changes**; the secret is compiled in and changing it
-invalidates all previously generated mapping tables.
+A place ID is the first 12 bytes of
+`sha256(country \x00 postcode \x00 city \x00 street + secretMAC)`,
+hex-encoded to 24 characters. IDs are deterministic for the same normalized
+address.
 
-## Architecture
+> **Breaking:** the NUL-separated key format was introduced in `v0.0.36` to
+> make city/street boundary collisions impossible. Regenerate previously
+> imported tables. IDs also change whenever `_secretMAC` changes, which is why
+> the secret is a compile-time constant.
 
-The pipeline is a fixed producer/consumer chain wired in `core.go::Parse`:
+## 🏗 Architecture
 
-```
+```text
 preload.csv (trusted)  ──┐
-validated preload (csv) ──┼──>  chan *tagSet  targets  ──>  collect ──> JSON files
+validated preload (csv) ──┼──>  chan *tagSet  targets  ──>  collect  ──> JSON files
 pbfparser (pbf)        ───┘
 ```
 
-1. **`trustedPreloadFeed`** streams trusted postcode/city/street rows from
-   `preload.csv` into the `targets` channel, ahead of all other input.
-2. **`preloadFeed`** streams validated postcode/city pairs from the validated
-   preload CSV into `targets`.
-3. **`pbfparser`** decodes the PBF and pushes qualifying `addr:*` tag sets
-   into `targets`.
-4. **`collect`** drains `targets`, building the in-memory place index and
-   emitting JSON. All dedup and auto-correction logic lives here.
+1. **`trustedPreloadFeed`** streams trusted postcode/city/street rows first.
+2. **`preloadFeed`** streams validated postcode/city pairs next.
+3. **`pbfparser`** decodes the PBF and pushes complete `addr:*` tag sets.
+4. **`collect`** is the only consumer: dedup, city auto-correction,
+   Levenshtein warnings and JSON emission.
 
-Both preload feeds run to completion before the parser starts; all producers
-share one unbuffered `targets` channel and `collect` is its sole consumer.
-`Parse` creates the channel locally, so the package keeps no mutable global
-state and every stage is independently testable.
+Both preloads finish before the parser starts. `Parse` creates the channel
+locally, so the package holds **no mutable global state** and each stage runs
+independently in tests.
 
-PBF decoding is handled by the `internal/` tree (`pbf` → `decoder` →
-`protobuf`), which uses `github.com/destel/rill` for pipelined
-blob → batch → object processing with parallelism controlled via
-`runtime.GOMAXPROCS`.
+The `internal/` tree handles PBF decoding (`pbf` → `decoder` → `protobuf`),
+with `github.com/destel/rill` for the blob → batch → object pipeline and
+parallelism from `runtime.GOMAXPROCS`. Only nodes and dense nodes are decoded;
+ways and relations are ignored.
 
-### Address normalization
+### 🔤 Address normalization (`DE`)
 
-`uniform.go` dispatches by `t.Country`; only `"DE"` is implemented
-(`uniform_de.go`). Adding a new country means adding a `case` in `uniform.go`
-and a `uniform<CC>.go` file. DE normalization:
+`uniform.go` dispatches by country; `uniform_de.go` implements:
 
-- Rejects non-Latin1 city/street.
-- Parses the postcode as int; pads 4-digit postcodes with a leading `0`,
-  rejects anything outside `0`-`99999`.
-- Canonicalizes `Strasse`/`Str.`/`strasse`/`str.` → `Straße`/`straße`.
-- Expands abbreviations (`a.d.` → `an der`, `i.` → `in`, `b.` → `bei`, …),
-  fixes common typos, then title-cases words while preserving a hardcoded list
-  of lowercase particles.
+- reject non-Latin1 city/street;
+- parse the postcode as int, pad 4-digit codes with `0`, reject anything
+  outside `0`–`99999`;
+- canonicalize `Strasse`/`Str.`/`strasse`/`str.` → `Straße`/`straße`
+  (`Hauptstr.` → `Hauptstraße`, no phantom space);
+- expand abbreviations (`a.d.` → `an der`, `i.` → `in`, `b.` → `bei`, …), fix
+  common typos (`in Isartal` → `im Isartal`, `/ Saale` → `/Saale`), collapse
+  whitespace, then title-case while preserving lowercase particles (`an`,
+  `am`, `der`, `in`, `von`, …) and uppercasing `ii`, `ot`, `nb`, `ofr.`,
+  `opf.`.
 
-## Development
+Adding a country: add a `case` to `uniform.go` and a `uniform<CC>.go` file
+returning the drop flag.
 
+## 📦 Use it as a library
+
+```go
+package main
+
+import (
+	"log"
+	"os"
+
+	"paepcke.de/osm2addr"
+)
+
+func main() {
+	f, err := os.Open("data/germany-latest.osm.pbf")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	osm2addr.InitDebug()
+	if err := osm2addr.Parse(&osm2addr.Target{
+		Country:  "DE",
+		File:     f,
+		FileName: "data/germany-latest.osm.pbf",
+	}); err != nil {
+		log.Fatal(err)
+	}
+}
 ```
-make build     # build the binary
-make check     # gofmt + go vet + go fix + staticcheck
-make deps      # destructive: recreates go.mod/go.sum (avoid; dependabot manages deps)
-make update-de # download the Germany PBF extract
+
+`Parse` writes the JSON tables relative to the working directory, exactly like
+the CLI.
+
+## 🛠 Development
+
+```shell
+make build     # go build with version/commit/buildtime ldflags
+make check     # gofmt + go vet + go fix + staticcheck ./...
+make test      # CGO_ENABLED=1 go test -race -count=1 ./...
+make deps      # destructive: recreates go.mod/go.sum (avoid; dependabot owns deps)
 ```
 
-Test suite (fast, parallel, no large fixtures required):
+Tests are fast and parallel, and never touch `data/` or the repo `json/` tree
+(pure fixtures, `t.TempDir()`):
 
-```
-go test -count=1 ./...        # unit + pipeline tests, incl. a tiny generated PBF
-go test -race -count=1 ./...  # with the race detector (requires CGO_ENABLED=1)
+```shell
+go test -count=1 ./...        # unit + pipeline tests, tiny generated PBF
+go test -race -count=1 ./...
 ```
 
-The fixed workflow for every change:
+Every change follows the fixed flow:
 
 1. `gofmt -w .`
 2. `go build -o osm2addr ./cmd/osm2addr`
 3. `go test -count=1 ./...`
 4. commit
-5. tag `v0.0.<N+1>` (patch segment only; never move or reuse a tag)
+5. tag `v0.0.<N+1>` (patch only; never move or reuse a tag)
 
-## License
+## 📚 Docs
 
-BSD 3-Clause — see [LICENSE](LICENSE). The `internal/` PBF decoding stack is
-Apache-2.0 — see [internal/LICENSE](internal/LICENSE).
+- API reference: [pkg.go.dev/paepcke.de/osm2addr](https://pkg.go.dev/paepcke.de/osm2addr)
+- Project home: [paepcke.de/osm2addr](https://paepcke.de/osm2addr/)
+- Sample output: [examples/](examples/)
+- Releases: [github.com/paepckehh/osm2addr/releases](https://github.com/paepckehh/osm2addr/releases)
+
+## 🛡 License
+
+[BSD 3-Clause](LICENSE). The `internal/` PBF decoding stack is Apache-2.0 —
+see [internal/LICENSE](internal/LICENSE).
+
+## 📃 Citation
+
+```bibtex
+@misc{osm2addr,
+  author = {Michael Paepcke},
+  title = {osm2addr: turn OpenStreetMap PBF extracts into normalized postal-address mapping tables},
+  year = {2024},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://paepcke.de/osm2addr}}
+}
+```

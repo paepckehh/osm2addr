@@ -19,7 +19,7 @@ func collect(target *Target, targets <-chan *tagSet) {
 
 	// range over targets channel
 	for t := range targets {
-		pid := id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
+		pid := t.placeID()
 		if _, ok := placeIDs[pid]; ok {
 			dbg("Drop:[Dedup][PlaceID][%v]%v %v %v", t.Country, t.Postcode, t.City, t.Street)
 			continue
@@ -60,7 +60,7 @@ func collect(target *Target, targets <-chan *tagSet) {
 					correctedCounter++
 					dbg("Norm:[City][Sep]#%v# =====> #%v#", t.City, ci)
 					t.City = ci
-					pid = id(string(t.Country) + string(t.Postcode) + string(t.City) + string(t.Street))
+					pid = t.placeID()
 					correctedCity = true
 					break
 				}
@@ -68,6 +68,11 @@ func collect(target *Target, targets <-chan *tagSet) {
 			if !correctedCity {
 				places[t.Postcode][t.City] = make(map[street]placeIdHex)
 				places2[t.Postcode][t.City] = make(map[street]bool)
+				if !t.Preloaded {
+					e := fmt.Sprintf("[WARNING][NON-PRELOADED-POSTCODE-CITY-ADDED][POSTCODE:%v][CITY:%v]", t.Postcode, t.City)
+					warning[e]++
+					warningCounter++
+				}
 				for ci := range places[t.Postcode] {
 					if ci == t.City {
 						// the new city itself was just seeded above
