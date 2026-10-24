@@ -13,7 +13,7 @@ look like official postal data.
 [![Go Report Card](https://goreportcard.com/badge/paepcke.de/osm2addr)](https://goreportcard.com/report/paepcke.de/osm2addr)
 [![Go Build](https://github.com/paepckehh/osm2addr/actions/workflows/golang.yml/badge.svg)](https://github.com/paepckehh/osm2addr/actions/workflows/golang.yml)
 [![golangci-lint](https://github.com/paepckehh/osm2addr/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/paepckehh/osm2addr/actions/workflows/golangci-lint.yml)
-[![License](https://img.shields.io/github/license/paepckehh/osm2addr)](https://github.com/paepckehh/osm2addr/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/paepckehh/osm2addr)](https://github.com/paepckehh/osm2addr/blob/main/LICENSE)
 [![SemVer](https://img.shields.io/github/v/release/paepckehh/osm2addr)](https://github.com/paepckehh/osm2addr/releases/latest)
 [![built with nix](https://builtwithnix.org/badge.svg)](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=osm2addr)
 
@@ -61,6 +61,12 @@ seconds**, single binary, no network access.
   linux/freebsd/darwin/netbsd/openbsd/windows, amd64 and arm64.
 - 🧪 **Fast tests** — parallel, self-contained, with a tiny generated PBF
   fixture. `go test ./...` finishes in milliseconds.
+- 🐧 **Grep-friendly** — stable `OSM:<Section>:<Key>` progress lines, optional
+  per-record debug output.
+
+Sibling projects with the same look and feel:
+[`certinfo`](https://paepcke.de/certinfo/), [`tlsinfo`](https://paepcke.de/tlsinfo/),
+[`dnsinfo`](https://paepcke.de/dnsinfo/).
 
 ## 🚀 Install
 
@@ -76,7 +82,8 @@ go install paepcke.de/osm2addr/cmd/osm2addr@latest
 go run paepcke.de/osm2addr/cmd/osm2addr@latest DE data/germany-latest.osm.pbf
 ```
 
-**Pre-built binaries:**
+**Pre-built binaries** (linux/freebsd/darwin/netbsd/openbsd/windows,
+amd64+arm64):
 
 → [github.com/paepckehh/osm2addr/releases/latest](https://github.com/paepckehh/osm2addr/releases/latest)
 
@@ -84,6 +91,10 @@ go run paepcke.de/osm2addr/cmd/osm2addr@latest DE data/germany-latest.osm.pbf
 
 ```shell
 nix-shell -p osm2addr
+```
+
+```nix
+environment.systemPackages = [ pkgs.osm2addr ];
 ```
 
 ## 🎬 Quickstart
@@ -99,12 +110,16 @@ osm2addr DE data/germany-latest.osm.pbf
 Output lands in `./json/DE/`:
 
 ```text
-json/DE/addr.json             postcode → city → street → true
-json/DE/addr2placeID.json     postcode → city → street → place ID
-json/DE/placeID2addr.json     place ID → {country, postcode, city, street}
-json/DE/warning.json          near-duplicates and non-preloaded pairs
-json/DE/corrected.json        auto-corrected city separators
+json/DE/addr.json                  postcode → city → street → true
+json/DE/addr2placeID.json          postcode → city → street → place ID
+json/DE/placeID2addr.json          place ID → {country, postcode, city, street}
+json/DE/warning.json               near-duplicates and non-preloaded pairs
+json/DE/corrected.json             auto-corrected city separators
+json/DE/error.preload.json         validated preload row errors
+json/DE/error.preload.trusted.json trusted preload row errors
 ```
+
+The last two files are only written when the matching preload file exists.
 
 Or use the Makefile shortcuts:
 
@@ -129,6 +144,9 @@ osm2addr [<COUNTRY_CODE> [<PATH_TO_PBF>]]
 Output is always written to `json/<COUNTRY_CODE>/` relative to the process
 CWD, never next to the binary.
 
+The PBF file is opened exactly once after argument parsing. If it cannot be
+read, the process exits with a fatal error before any output is written.
+
 ### 🐞 Debug logging
 
 Set `DEBUG` to any non-empty value except `0`, `false`, `no`, `off`:
@@ -138,15 +156,21 @@ DEBUG=1 osm2addr DE data/germany-latest.osm.pbf
 ```
 
 Every dropped, corrected or added record becomes an `OSM:DEBUG:*` line.
+`DEBUG` only adds logging; it never changes what is written.
 
 ### 📊 Sample run
 
 ```text
-OSM:Version              # osm2addr v0.0.36 (commit deadbeef, built 2026-10-24T00:00:00Z)
+OSM:Version              # osm2addr v0.0.37 (commit deadbeef, built 2026-10-24T00:00:00Z)
 OSM:Startup               # 2026-10-24 09:23:45 +0000 UTC m=+0.000386754
 OSM:TargetCountry         # DE
 OSM:Debug                 # false
 OSM:File                  # data/germany-latest.osm.pbf
+----------------------------------------------------------------------------------
+OSM:PreLoadTrusted        # data/preload.csv
+OSM:PreLoadTrusted:Fail   #           0
+OSM:PreLoadTrusted:Total  #     119.733
+OSM:Writer:JSON           # json/DE/error.preload.trusted.json
 ----------------------------------------------------------------------------------
 OSM:PreLoadFile           # data/validated-preload/DE.csv
 OSM:PreLoadFile:Fail      #           1
@@ -186,10 +210,22 @@ OSM:Writer:JSON           # json/DE/corrected.json
 OSM:Time:Total            # 45.329429572s
 ```
 
+| Counter | Meaning |
+| --- | --- |
+| `PBF:Parsed:Objects` | Nodes, ways, relations and headers seen |
+| `PBF:Parsed:Tags` | Tags inspected, including non-address tags |
+| `PBF:Complete:AddrTags` | Nodes with complete postcode + city + street |
+| `PBF:Err:Uniform` | Entries dropped by country normalization |
+| `PBF:Err:Country/Postcode/City/Street` | Malformed address fields |
+| `Corrected:Auto:*` | City separators normalized against an existing city |
+| `Corrected:Warn:*` | Levenshtein near-duplicates and non-preloaded pairs |
+| `Collect:Places:Total` | Unique place IDs exported |
+
 ## 📥 Preload data
 
 Preloads are optional. They pre-seed the place index so that OSM data can be
-checked against a known-good address list.
+checked against a known-good address list. Both feeds run to completion before
+the PBF parser starts.
 
 ### Validated preload CSV (expected for `DE`)
 
@@ -199,9 +235,21 @@ Place the file at `<dirname of PBF>/validated-preload/<COUNTRY_CODE>.csv`:
 - city in column **2**, postcode in column **3**;
 - postcode must be 5 characters (German).
 
+```csv
+osm_id,ags,ort,plz,landkreis,bundesland
+1104550,08335001,Aach,78267,Landkreis Konstanz,Baden-Württemberg
+```
+
 Rows with the wrong field count, bad quoting or failing length checks are
-counted into `json/<CC>/error.preload.json`. Their entries take part in
-dedup and place-ID generation like OSM data.
+counted into `json/<CC>/error.preload.json`. Their entries take part in dedup
+and place-ID generation like OSM data.
+
+A row may omit the street. Such a city-only row seeds the postcode/city pair
+but produces no place ID and no street entry.
+
+A path that opens but is not a regular file is rejected up front, because
+`csv.Reader` would otherwise fail on every read without ever reaching
+`io.EOF`.
 
 ### Trusted preload.csv
 
@@ -217,10 +265,18 @@ A file named `preload.csv` next to the PBF (process CWD as fallback) is loaded
 - rows with an empty postcode or city, or broken CSV, are counted into
   `json/<CC>/error.preload.trusted.json`.
 
+```csv
+POSTLEITZAHL;ORT_NAME;STRASSE_NAME
+24937;Flensburg;Am Pferdewasser
+```
+
+A production-shaped sample lives in
+[example-preload.csv](example-preload.csv).
+
 ## 📤 Output files
 
 All files are written into `json/<COUNTRY_CODE>/`, tab-indented, `0644`,
-overwritten silently.
+overwritten silently. Directories are created with `0755`.
 
 | File | Content |
 | --- | --- |
@@ -231,6 +287,20 @@ overwritten silently.
 | `corrected.json` | message → count (auto-corrected city separators) |
 | `error.preload.json` | message → count (validated preload row errors) |
 | `error.preload.trusted.json` | message → count (trusted preload row errors) |
+
+```json
+{
+  "01067": {
+    "Dresden": {
+      "Adlergasse": "05ba9df31e1235fbd3d23296"
+    }
+  }
+}
+```
+
+`addr.json` keeps the same shape with `true` instead of the place ID.
+`warning.json` and `corrected.json` are always written, even when empty (`{}`).
+Sample outputs for a German extract live in [examples/json/DE](examples/json/DE).
 
 ### 🆔 Place ID
 
@@ -266,6 +336,14 @@ The `internal/` tree handles PBF decoding (`pbf` → `decoder` → `protobuf`),
 with `github.com/destel/rill` for the blob → batch → object pipeline and
 parallelism from `runtime.GOMAXPROCS`. Only nodes and dense nodes are decoded;
 ways and relations are ignored.
+
+```
+internal/pbf       public Decoder, functional options, rill pipeline
+internal/decoder   blob/header parsing, PrimitiveBlock → model.Object
+internal/protobuf  generated osm.proto types (committed)
+internal/model     Node/Way/Relation/Header and ElementType
+internal/core      pooled byte buffers
+```
 
 ### 🔤 Address normalization (`DE`)
 
@@ -315,16 +393,26 @@ func main() {
 }
 ```
 
+Public API ([godoc](https://pkg.go.dev/paepcke.de/osm2addr)):
+
+- `Parse(*Target) error` — run the full pipeline.
+- `Target` — country, open PBF file plus its filename (used to locate the
+  preload files).
+- `InitDebug()` / `DebugEnabled()` — control the `OSM:DEBUG:*` event log.
+
 `Parse` writes the JSON tables relative to the working directory, exactly like
-the CLI.
+the CLI. The `internal/` tree is not part of the public API.
 
 ## 🛠 Development
 
 ```shell
-make build     # go build with version/commit/buildtime ldflags
-make check     # gofmt + go vet + go fix + staticcheck ./...
-make test      # CGO_ENABLED=1 go test -race -count=1 ./...
-make deps      # destructive: recreates go.mod/go.sum (avoid; dependabot owns deps)
+make build       # go build with version/commit/buildtime ldflags
+make check       # gofmt + go vet + go fix + staticcheck ./...
+make test        # CGO_ENABLED=1 go test -race -count=1 ./...
+make update-de   # download the Germany extract into data/
+make update-dach # download the DACH extract into data/
+make update-eu   # download the Europe extract into data/
+make deps        # destructive: recreates go.mod/go.sum (avoid; dependabot owns deps)
 ```
 
 Tests are fast and parallel, and never touch `data/` or the repo `json/` tree
@@ -343,12 +431,35 @@ Every change follows the fixed flow:
 4. commit
 5. tag `v0.0.<N+1>` (patch only; never move or reuse a tag)
 
+Repository layout:
+
+```text
+cmd/osm2addr/   CLI entrypoint
+*.go            pipeline, normalization, collector, writer
+internal/       PBF decoding stack (Apache-2.0)
+examples/       sample output and regeneration Makefile
+data/           gitignored PBF/extract workspace
+```
+
 ## 📚 Docs
 
 - API reference: [pkg.go.dev/paepcke.de/osm2addr](https://pkg.go.dev/paepcke.de/osm2addr)
 - Project home: [paepcke.de/osm2addr](https://paepcke.de/osm2addr/)
-- Sample output: [examples/](examples/)
+- Sample output and run instructions: [examples/](examples/)
+- Preload example: [example-preload.csv](example-preload.csv)
 - Releases: [github.com/paepckehh/osm2addr/releases](https://github.com/paepckehh/osm2addr/releases)
+
+## 🤝 Contributing
+
+Yes, please! Open an issue or send a PR. Keep tests parallel and
+self-contained, and run the fixed flow above before submitting. See
+[AGENTS.md](AGENTS.md) for the repository conventions.
+
+## 🧭 Roadmap
+
+- [ ] Additional country normalizers beside `DE`
+- [ ] Configurable preload schema via `Target` fields
+- [ ] Optional per-country street-level validation reports
 
 ## 🛡 License
 
