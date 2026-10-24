@@ -77,8 +77,10 @@ header whose separator is auto-detected (`,` assumed by default; `;`, tab,
 `|` detected) and which contains the exact field names `POSTLEITZAHL`,
 `ORT_NAME` and `STRASSE_NAME`. If confirmed, the rows are fed into `targets`
 **first** as trusted postcode/city/street values: `uniform` normalization is
-deliberately skipped and no matching is attempted. Malformed rows, fields
-with an empty postcode or city, are counted
+deliberately skipped and no matching is attempted, but surrounding
+whitespace is trimmed off every value (otherwise stray spaces split cities
+and streets into phantom duplicates the separator correction cannot merge).
+Malformed rows, fields with an empty postcode or city, are counted
 into `json/<CC>/error.preload.trusted.json`. Order in `core.go::Parse`:
 collector → trusted preload (wait) → validated preload (wait) → PBF parser.
 

@@ -212,7 +212,8 @@ A file named `preload.csv` next to the PBF (process CWD as fallback) is loaded
   `;`, tab and `|` supported), a UTF-8 BOM is stripped and UTF-8 is verified;
 - the header must contain the exact names `POSTLEITZAHL`, `ORT_NAME` and
   `STRASSE_NAME`, in any order;
-- rows are trusted street-level values: **no** normalization and no matching;
+- rows are trusted street-level values: **no** normalization and no matching,
+  but stray surrounding whitespace is trimmed off every value;
 - rows with an empty postcode or city, or broken CSV, are counted into
   `json/<CC>/error.preload.trusted.json`.
 

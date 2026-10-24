@@ -127,6 +127,45 @@ func TestTrustedPreloadFeedEmptyFields(t *testing.T) {
 	}
 }
 
+func TestTrustedPreloadFeedTrimsWhitespace(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	csvData := "POSTLEITZAHL;ORT_NAME;STRASSE_NAME\n" +
+		" 82256 ; F\u00fcrstenfeldbruck ;Hauptstrasse \n" +
+		"10115;Berlin;  \n" +
+		"\t10117\t;\tHamburg\t;\n"
+	if err := os.WriteFile(filepath.Join(dir, "preload.csv"), []byte(csvData), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	target := &Target{Country: "DE", FileName: filepath.Join(dir, "germany.pbf"), outDir: dir}
+	if !target.checkTrustedPreloadFile() {
+		t.Fatal("trusted preload file must be detected")
+	}
+
+	targets := make(chan *tagSet, 4)
+	target.trustedPreloadFeed(targets)
+	close(targets)
+
+	var got []*tagSet
+	for ts := range targets {
+		got = append(got, ts)
+	}
+	if len(got) != 3 {
+		t.Fatalf("expected three entries, got %d", len(got))
+	}
+	if got[0].Postcode != "82256" || got[0].City != "F\u00fcrstenfeldbruck" || got[0].Street != "Hauptstrasse" {
+		t.Errorf("stray whitespace must be trimmed, got %+v", got[0])
+	}
+	if got[1].Postcode != "10115" || got[1].City != "Berlin" || got[1].Street != "" {
+		t.Errorf("blank street must stay empty, got %+v", got[1])
+	}
+	if got[2].Postcode != "10117" || got[2].City != "Hamburg" {
+		t.Errorf("tab whitespace must be trimmed, got %+v", got[2])
+	}
+}
+
 func TestTrustedPreloadHeader(t *testing.T) {
 	t.Parallel()
 

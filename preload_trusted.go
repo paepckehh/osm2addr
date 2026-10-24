@@ -56,7 +56,8 @@ func (target *Target) trustedPreloadFeed(targets chan<- *tagSet) {
 				dbg("Drop:[PreloadTrusted][CSV][Fields]%v", row)
 				continue
 			}
-			if row[target.PreLoadTrusted.Postcode] == "" || row[target.PreLoadTrusted.City] == "" {
+			if strings.TrimSpace(row[target.PreLoadTrusted.Postcode]) == "" ||
+				strings.TrimSpace(row[target.PreLoadTrusted.City]) == "" {
 				e := fmt.Sprintf("[ERROR][PRETRUSTED][EMPTY]#%v#", row)
 				fail[e]++
 				failCounter++
@@ -64,9 +65,9 @@ func (target *Target) trustedPreloadFeed(targets chan<- *tagSet) {
 				continue
 			}
 			t := &tagSet{
-				Postcode:  postcode(row[target.PreLoadTrusted.Postcode]),
-				City:      city(row[target.PreLoadTrusted.City]),
-				Street:    street(row[target.PreLoadTrusted.Street]),
+				Postcode:  postcode(strings.TrimSpace(row[target.PreLoadTrusted.Postcode])),
+				City:      city(strings.TrimSpace(row[target.PreLoadTrusted.City])),
+				Street:    street(strings.TrimSpace(row[target.PreLoadTrusted.Street])),
 				Country:   country(target.Country),
 				Preloaded: true,
 			}
