@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1035" width="1000" height="1035" role="img" aria-label="osm2addr DE -- 437M objects in, 390K places out">
+  <title>osm2addr DE -- 437M objects in, 390K places out</title>
+  <defs>
+    <linearGradient id="term" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1728"/>
+      <stop offset="1" stop-color="#091120"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#122037"/>
+      <stop offset="1" stop-color="#0f1b2e"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <style>
+      .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+    </style>
+  </defs>
+  <g filter="url(#soft)">
+    <rect width="1000" height="1035" rx="16" fill="url(#term)" stroke="#22344f"/>
+  </g>
+  <path d="M0 16 A16 16 0 0 1 16 0 H984 A16 16 0 0 1 1000 16 V44 H0 Z" fill="url(#bar)"/>
+  <line x1="0" y1="44.5" x2="1000" y2="44.5" stroke="#1e2e47"/>
+  <circle cx="24" cy="22" r="6" fill="#f87171"/>
+  <circle cx="44" cy="22" r="6" fill="#fbbf24"/>
+  <circle cx="64" cy="22" r="6" fill="#34d399"/>
+  <text x="500" y="27" class="mono" font-size="12" text-anchor="middle" fill="#7488a3">osm2addr DE -- 437M objects in, 390K places out</text>
+  <text x="32" y="72" class="mono" font-size="14" xml:space="preserve"><tspan fill="#34d399">$ </tspan><tspan fill="#c9d6e8">./osm2addr DE data/germany-latest.osm.pbf</tspan></text>
+  <line x1="0" y1="86" x2="1000" y2="86" stroke="#1e2e47"/>
+  <g class="mono" font-size="14">
+    <text x="32" y="110" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Version              </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8"> osm2addr v0.0.40 (commit 395b0cd, built 2026-10-24T08:47:22Z)</tspan></text>
+    <text x="32" y="131" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Startup               </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8"> 2026-10-24 08:48:04.604059667 +0200 CEST m=+0.000243781</tspan></text>
+    <text x="32" y="152" xml:space="preserve"><tspan fill="#7d8fa8">OSM:TargetCountry         </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8"> DE</tspan></text>
+    <text x="32" y="173" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Debug                 </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8"> false</tspan></text>
+    <text x="32" y="194" xml:space="preserve"><tspan fill="#7d8fa8">OSM:File                  </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> data/germany-latest.osm.pbf</tspan></text>
+    <text x="32" y="215" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PreLoadTrusted        </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8"> n/a</tspan></text>
+    <line x1="32" y1="231" x2="968" y2="231" stroke="#1e2e47"/>
+    <text x="32" y="257" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PreLoadFile           </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> data/validated-preload/DE.csv</tspan></text>
+    <text x="32" y="278" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PreLoadFile:Fail      </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> 0</tspan></text>
+    <text x="32" y="299" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PreLoadFile:Total     </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> 12817</tspan></text>
+    <text x="32" y="320" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Writer:JSON           </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> json/DE/error.preload.json</tspan></text>
+    <line x1="32" y1="336" x2="968" y2="336" stroke="#1e2e47"/>
+    <text x="32" y="362" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:File:URL          </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> https://download.geofabrik.de/europe/germany-updates</tspan></text>
+    <text x="32" y="383" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:File:Repl:USM     </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> 4858</tspan></text>
+    <text x="32" y="404" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:File:Repl:TS      </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> 2026-07-27 22:21:20 +0200 CEST</tspan></text>
+    <line x1="32" y1="420" x2="968" y2="420" stroke="#1e2e47"/>
+    <text x="32" y="446" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Parsed:Objects    </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8"> 437.237.899</tspan></text>
+    <text x="32" y="467" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Parsed:Tags       </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8">  80.981.223</tspan></text>
+    <text x="32" y="488" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Parsed:Country    </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8">   2.919.056</tspan></text>
+    <text x="32" y="509" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Parsed:Street     </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8">   4.019.396</tspan></text>
+    <text x="32" y="530" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Parsed:City       </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8">   3.811.388</tspan></text>
+    <text x="32" y="551" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Parsed:Postcode   </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8">   3.693.982</tspan></text>
+    <line x1="32" y1="567" x2="968" y2="567" stroke="#1e2e47"/>
+    <text x="32" y="593" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Complete:AddrTags </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#5eead4">   3.627.717</tspan></text>
+    <text x="32" y="614" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Uniq:Country      </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c9d6e8">          11</tspan></text>
+    <text x="32" y="635" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Err:Uniform       </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#f8d78a">       6.180</tspan></text>
+    <text x="32" y="656" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Err:Country       </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#f8d78a">           1</tspan></text>
+    <text x="32" y="677" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Err:Postcode      </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#f8d78a">           1</tspan></text>
+    <text x="32" y="698" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Err:City          </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#f8d78a">           1</tspan></text>
+    <text x="32" y="719" xml:space="preserve"><tspan fill="#7d8fa8">OSM:PBF:Err:Street        </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#f8d78a">         166</tspan></text>
+    <line x1="32" y1="735" x2="968" y2="735" stroke="#1e2e47"/>
+    <text x="32" y="761" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Corrected:Auto:Cases  </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c4b5fd">           2</tspan></text>
+    <text x="32" y="782" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Corrected:Auto:Total  </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c4b5fd">           2</tspan></text>
+    <text x="32" y="803" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Corrected:Warn:Cases  </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c4b5fd">       1.923</tspan></text>
+    <text x="32" y="824" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Corrected:Warn:Total  </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#c4b5fd">       1.923</tspan></text>
+    <text x="32" y="845" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Collect:Places:Total  </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#5eead4">     390.673</tspan></text>
+    <line x1="32" y1="861" x2="968" y2="861" stroke="#1e2e47"/>
+    <text x="32" y="887" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Writer:JSON           </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> json/DE/addr.json</tspan></text>
+    <text x="32" y="908" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Writer:JSON           </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> json/DE/addr2placeID.json</tspan></text>
+    <text x="32" y="929" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Writer:JSON           </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> json/DE/placeID2addr.json</tspan></text>
+    <text x="32" y="950" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Writer:JSON           </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> json/DE/warning.json</tspan></text>
+    <text x="32" y="971" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Writer:JSON           </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#a8cbff"> json/DE/corrected.json</tspan></text>
+    <text x="32" y="992" xml:space="preserve"><tspan fill="#7d8fa8">OSM:Time:Total            </tspan><tspan fill="#3b506e">#</tspan><tspan fill="#5eead4"> 36.572546824s</tspan></text>
+  </g>
+</svg>

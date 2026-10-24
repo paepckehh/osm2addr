@@ -161,57 +161,29 @@ make run           # build and run with defaults
 make test          # race-enabled test suite
 ```
 
-### 📊 Sample run
+### 📸 Real world, real output
 
-```text
-OSM:Version              # osm2addr v0.0.40 (commit deadbeef, built 2026-10-24T00:00:00Z)
-OSM:Startup               # 2026-10-24 09:23:45 +0000 UTC m=+0.000386754
-OSM:TargetCountry         # DE
-OSM:Debug                 # false
-OSM:File                  # data/germany-latest.osm.pbf
-----------------------------------------------------------------------------------
-OSM:PreLoadTrusted        # data/preload.csv
-OSM:PreLoadTrusted:Fail   #           0
-OSM:PreLoadTrusted:Total  #     119.733
-OSM:Writer:JSON           # json/DE/error.preload.trusted.json
-----------------------------------------------------------------------------------
-OSM:PreLoadFile           # data/validated-preload/DE.csv
-OSM:PreLoadFile:Fail      #           1
-OSM:PreLoadFile:Total     #      12.853
-OSM:Writer:JSON           # json/DE/error.preload.json
-----------------------------------------------------------------------------------
-OSM:PBF:File:URL          # https://download.geofabrik.de/europe/germany-updates
-OSM:PBF:File:Repl:USM     # 4330
-OSM:PBF:File:Repl:TS      # 2026-10-20 21:21:14 +0000 UTC
-----------------------------------------------------------------------------------
-OSM:PBF:Parsed:Objects    # 411.113.874
-OSM:PBF:Parsed:Tags       #  71.720.811
-OSM:PBF:Parsed:Country    #   2.792.983
-OSM:PBF:Parsed:Street     #   3.905.365
-OSM:PBF:Parsed:City       #   3.659.945
-OSM:PBF:Parsed:Postcode   #   3.513.835
-----------------------------------------------------------------------------------
-OSM:PBF:Complete:AddrTags #   2.711.889
-OSM:PBF:Uniq:Country      #          10
-OSM:PBF:Err:Uniform       #      21.854
-OSM:PBF:Err:Country       #           0
-OSM:PBF:Err:Postcode      #           0
-OSM:PBF:Err:City          #          17
-OSM:PBF:Err:Street        #         162
-----------------------------------------------------------------------------------
-OSM:Corrected:Auto:Cases  #          78
-OSM:Corrected:Auto:Total  #      21.082
-OSM:Corrected:Warn:Cases  #           8
-OSM:Corrected:Warn:Total  #           8
-OSM:Collect:Places:Total  #     278.381
-----------------------------------------------------------------------------------
-OSM:Writer:JSON           # json/DE/addr.json
-OSM:Writer:JSON           # json/DE/addr2placeID.json
-OSM:Writer:JSON           # json/DE/placeID2addr.json
-OSM:Writer:JSON           # json/DE/warning.json
-OSM:Writer:JSON           # json/DE/corrected.json
-OSM:Time:Total            # 45.329429572s
-```
+Actual run against the German extract: 437M objects in, 390K places out, 34s.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-run-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshot-run-light.svg">
+    <img src="docs/screenshot-run-light.svg" alt="osm2addr processing the German OpenStreetMap extract: 437 million objects, 3.6 million complete address tags and 390 thousand unique places in 34 seconds" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub><b>One German extract, one run</b>: preloads, PBF stats, corrections and output files in a single report.</sub></p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-json-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="docs/screenshot-json-light.svg">
+    <img src="docs/screenshot-json-light.svg" alt="Generated addr2placeID.json mapping Dresden postcodes and streets to deterministic 24-character place IDs" width="100%">
+  </picture>
+</p>
+
+<p align="center"><sub><b>Directly importable JSON</b>: postcode to city to street to a deterministic place ID, straight from the same run.</sub></p>
 
 | Counter | Meaning |
 | --- | --- |
@@ -482,7 +454,7 @@ cmd/osm2addr/   CLI entrypoint
 *.go            pipeline, normalization, collector, writer
 internal/       PBF decoding stack (Apache-2.0)
 examples/       sample output and regeneration Makefile
-docs/           hero and established banner artwork (theme-aware SVG)
+docs/           hero, established and terminal screenshot artwork (theme-aware SVG)
 data/           gitignored PBF/extract workspace
 ```
 
@@ -494,6 +466,7 @@ data/           gitignored PBF/extract workspace
 - Preload example: [example-preload.csv](example-preload.csv)
 - Hero artwork: [dark](docs/hero-dark.svg) / [light](docs/hero-light.svg): dependency-free SVG dashboard (theme-aware `<picture>`)
 - Established banner: [dark](docs/established-dark.svg) / [light](docs/established-light.svg): 2025 to today, 39+ tagged releases (theme-aware `<picture>`)
+- Terminal screenshots: [real run](docs/screenshot-run-light.svg) / [generated JSON](docs/screenshot-json-light.svg): rendered from actual output with [docs/render_terminal_svg.py](docs/render_terminal_svg.py) (light and dark variants)
 - Releases: [github.com/paepckehh/osm2addr/releases](https://github.com/paepckehh/osm2addr/releases)
 
 ## 🤝 Contributing
