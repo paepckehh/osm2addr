@@ -124,3 +124,124 @@ func TestPBFParser(t *testing.T) {
 		t.Errorf("got %+v, want %+v", *got[0], *want)
 	}
 }
+
+// writePBFNodes writes a minimal PBF with one header blob and one data blob
+// holding the supplied string table and nodes.
+func writePBFNodes(t *testing.T, path string, table []string, nodes []*protobuf.Node) {
+	t.Helper()
+
+	for _, n := range nodes {
+		if n.Lat == nil {
+			n.Lat = proto.Int64(0)
+		}
+		if n.Lon == nil {
+			n.Lon = proto.Int64(0)
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := appendPBFBlob(&buf, "OSMHeader", &protobuf.HeaderBlock{
+		Writingprogram: proto.String("osm2addr-test"),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := appendPBFBlob(&buf, "OSMData", &protobuf.PrimitiveBlock{
+		Stringtable:    &protobuf.StringTable{S: table},
+		Primitivegroup: []*protobuf.PrimitiveGroup{{Nodes: nodes}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, buf.Bytes(), 0644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func parsePBFEntries(t *testing.T, target *Target) []*tagSet {
+	t.Helper()
+
+	targets := make(chan *tagSet, 16)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		pbfparser(target, targets)
+	}()
+	<-done
+	close(targets)
+
+	var got []*tagSet
+	for ts := range targets {
+		got = append(got, ts)
+	}
+	return got
+}
+
+func TestPBFParserDropsInvalidCountry(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	pbfPath := filepath.Join(dir, "invalid-country.osm.pbf")
+	table := []string{
+		"", "addr:country", "de", "USA",
+		"addr:postcode", "10115", "addr:city", "Berlin",
+		"addr:street", "Lowercase", "Uppercase", "NoCountry",
+	}
+	nodes := []*protobuf.Node{
+		{Id: proto.Int64(1), Keys: []uint32{1, 4, 6, 8}, Vals: []uint32{2, 5, 7, 9}},  // lowercase country
+		{Id: proto.Int64(2), Keys: []uint32{1, 4, 6, 8}, Vals: []uint32{3, 5, 7, 10}}, // three-letter country
+		{Id: proto.Int64(3), Keys: []uint32{4, 6, 8}, Vals: []uint32{5, 7, 11}},       // no country, default applies
+	}
+	writePBFNodes(t, pbfPath, table, nodes)
+
+	f, err := os.Open(pbfPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	target := &Target{Country: "DE", FileName: pbfPath, File: f, outDir: dir}
+	got := parsePBFEntries(t, target)
+	if len(got) != 1 {
+		t.Fatalf("invalid country tags must not fall back to the target country, got %v", got)
+	}
+	if got[0].Country != "DE" || got[0].Street != "NoCountry" {
+		t.Errorf("unexpected entry: %+v", *got[0])
+	}
+}
+
+func TestPBFParserDropsIncompleteAndMalformed(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	pbfPath := filepath.Join(dir, "malformed.osm.pbf")
+	table := []string{
+		"", "addr:postcode", "10115", "addr:city", "Berlin",
+		"addr:street", "Hauptstrasse", "ab", "B", "12",
+	}
+	nodes := []*protobuf.Node{
+		{Id: proto.Int64(1), Keys: []uint32{1, 3, 5}, Vals: []uint32{2, 4, 6}}, // valid
+		{Id: proto.Int64(2), Keys: []uint32{1, 3}, Vals: []uint32{2, 4}},       // missing street
+		{Id: proto.Int64(3), Keys: []uint32{1, 3, 5}, Vals: []uint32{2, 4, 7}}, // street too short
+		{Id: proto.Int64(4), Keys: []uint32{1, 3, 5}, Vals: []uint32{2, 8, 6}}, // city too short
+		{Id: proto.Int64(5), Keys: []uint32{1, 3, 5}, Vals: []uint32{9, 4, 6}}, // postcode too short
+	}
+	writePBFNodes(t, pbfPath, table, nodes)
+
+	f, err := os.Open(pbfPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	target := &Target{Country: "DE", FileName: pbfPath, File: f, outDir: dir}
+	got := parsePBFEntries(t, target)
+	if len(got) != 1 {
+		t.Fatalf("expected exactly one valid address, got %v", got)
+	}
+	if got[0].Street != "Hauptstraße" {
+		t.Errorf("unexpected entry: %+v", *got[0])
+	}
+}

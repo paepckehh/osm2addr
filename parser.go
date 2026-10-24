@@ -61,6 +61,7 @@ func pbfparser(target *Target, targets chan<- *tagSet) {
 			case *model.Node:
 				if len(o.Tags) > 0 {
 					t := tagSet{} // init new tag set
+					countryInvalid := false
 					for tag, content := range o.Tags {
 						tagCounter++
 						switch tag {
@@ -68,11 +69,13 @@ func pbfparser(target *Target, targets chan<- *tagSet) {
 							countryCounter++
 							if len(content) != 2 {
 								countryErr++
+								countryInvalid = true
 								dbg("Drop:[Country][Length][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
 								continue
 							}
 							if content != strings.ToUpper(content) {
 								countryErr++
+								countryInvalid = true
 								dbg("Drop:[Country][Case][Node:%v][Tags:%v]%v", o.ID, o.Tags, content)
 								continue
 							}
@@ -107,6 +110,9 @@ func pbfparser(target *Target, targets chan<- *tagSet) {
 						}
 					}
 
+					if countryInvalid {
+						continue
+					}
 					if t.Country == "" {
 						dbg("Norm:[Country][Default]%v =====> %v", t.Country, target.Country)
 						t.Country = country(target.Country)

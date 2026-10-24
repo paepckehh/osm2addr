@@ -117,6 +117,63 @@ func TestCollectPreloadedCitySeededWithoutStreet(t *testing.T) {
 	}
 }
 
+func TestCollectKeepsCityPrefixesSeparate(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	target := &Target{Country: "DE", outDir: dir}
+	entries := []*tagSet{
+		{Country: "DE", Postcode: "10115", City: "Berlin", Street: "Hauptstraße", Preloaded: true},
+		{Country: "DE", Postcode: "10115", City: "Berlin Mitte", Street: "Torstraße", Preloaded: true},
+	}
+
+	targets := make(chan *tagSet, len(entries))
+	for _, e := range entries {
+		targets <- e
+	}
+	close(targets)
+	collect(target, targets)
+
+	var addr map[string]map[string]map[string]bool
+	readJson(t, filepath.Join(dir, "DE", "addr.json"), &addr)
+	if len(addr["10115"]) != 2 {
+		t.Fatalf("city prefixes must not be merged, got %v", addr["10115"])
+	}
+	if !addr["10115"]["Berlin"]["Hauptstraße"] || !addr["10115"]["Berlin Mitte"]["Torstraße"] {
+		t.Errorf("unexpected city mapping: %v", addr["10115"])
+	}
+}
+
+func TestCollectCityCorrectionDedup(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	target := &Target{Country: "DE", outDir: dir}
+	entries := []*tagSet{
+		{Country: "DE", Postcode: "65123", City: "Bad-Homburg", Street: "Gartenweg", Preloaded: true},
+		{Country: "DE", Postcode: "65123", City: "Bad Homburg", Street: "Gartenweg", Preloaded: true},
+	}
+
+	targets := make(chan *tagSet, len(entries))
+	for _, e := range entries {
+		targets <- e
+	}
+	close(targets)
+	collect(target, targets)
+
+	var p map[string]tagSet
+	readJson(t, filepath.Join(dir, "DE", "placeID2addr.json"), &p)
+	if len(p) != 1 {
+		t.Errorf("corrected duplicate must not add a place ID, got %v", p)
+	}
+
+	var addr map[string]map[string]map[string]bool
+	readJson(t, filepath.Join(dir, "DE", "addr.json"), &addr)
+	if len(addr["65123"]) != 1 || len(addr["65123"]["Bad-Homburg"]) != 1 {
+		t.Errorf("unexpected corrected city mapping: %v", addr["65123"])
+	}
+}
+
 func readJson(t *testing.T, path string, v any) {
 	t.Helper()
 	b, err := os.ReadFile(path)

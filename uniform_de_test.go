@@ -122,6 +122,19 @@ func TestCamelCaseCityDE(t *testing.T) {
 		{"x ofr. y", "X OFr. y"},
 		{"bad homburg v.d. höhe", "Bad Homburg V.D. Höhe"},
 		{"berlin a", "Berlin a"},
+		{"x auf y", "X auf y"},
+		{"x beim y", "X beim y"},
+		{"x dem y", "X dem y"},
+		{"x den y", "X den y"},
+		{"x im y", "X im y"},
+		{"x kalten y", "X kalten y"},
+		{"x unter y", "X unter y"},
+		{"x ob y", "X ob y"},
+		{"x nb y", "X NB y"},
+		{"x von y", "X von y"},
+		{"x vor y", "X vor y"},
+		{"x vorm y", "X vorm y"},
+		{"x opf. y", "X OPf. y"},
 	}
 	for _, c := range cases {
 		t.Run(c.in, func(t *testing.T) {

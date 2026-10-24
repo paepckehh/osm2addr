@@ -221,6 +221,11 @@ OSM:Time:Total            # 45.329429572s
 | `Corrected:Warn:*` | Levenshtein near-duplicates and non-preloaded pairs |
 | `Collect:Places:Total` | Unique place IDs exported |
 
+Nodes without an `addr:country` tag inherit the target country. A node that
+*has* an `addr:country` tag but whose value is malformed (not exactly two
+uppercase characters) is dropped instead of falling back, so a lowercase
+`at` cannot be silently imported as a German address.
+
 ## 📥 Preload data
 
 Preloads are optional. They pre-seed the place index so that OSM data can be

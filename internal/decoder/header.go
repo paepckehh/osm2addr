@@ -45,6 +45,9 @@ func LoadHeader(reader io.Reader) (model.Header, error) {
 	if err != nil {
 		return model.Header{}, err
 	}
+	if len(e) == 0 {
+		return model.Header{}, fmt.Errorf("expected header data but got an empty payload")
+	}
 
 	hdr, ok := e[0].(*model.Header)
 	if !ok {
