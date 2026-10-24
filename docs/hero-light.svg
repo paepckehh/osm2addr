@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340" role="img" aria-label="osm2addr dashboard: turn an OpenStreetMap PBF extract into normalized postal-address tables">
+  <title>osm2addr - one PBF in, clean postal-address tables out</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fbff"/>
+      <stop offset="0.55" stop-color="#edf4fd"/>
+      <stop offset="1" stop-color="#e5eefb"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0.18" cy="0.18" r="0.72">
+      <stop offset="0" stop-color="#06b6d4" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0.86" cy="0.92" r="0.62">
+      <stop offset="0" stop-color="#10b981" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#10b981" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#94a3b8" stroke-opacity="0.16" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0891b2"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.98"/>
+      <stop offset="1" stop-color="#f8fbff" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0891b2" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#0891b2" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#10b981" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#7f9cc0" flood-opacity="0.30"/>
+    </filter>
+    <style>
+      .sans { font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="340" rx="24" fill="url(#bg)"/>
+  <rect width="1200" height="340" rx="24" fill="url(#grid)"/>
+  <rect width="1200" height="340" rx="24" fill="url(#glowA)"/>
+  <rect width="1200" height="340" rx="24" fill="url(#glowB)"/>
+  <rect x="0.5" y="0.5" width="1199" height="339" rx="23.5" fill="none" stroke="#bfd4ec"/>
+  <rect x="56" y="0" width="420" height="2" fill="url(#edge)"/>
+
+  <g>
+    <path d="M88 46 C68.1 46 52 62.1 52 82 C52 108 88 136 88 136 C88 136 124 108 124 82 C124 62.1 107.9 46 88 46 Z" fill="url(#mark)"/>
+    <circle cx="88" cy="81" r="14" fill="#ffffff"/>
+    <path d="M76 81 H100 M88 69 V93" stroke="#0891b2" stroke-width="3" stroke-linecap="round" stroke-opacity="0.75"/>
+  </g>
+
+  <text x="140" y="101" class="sans" font-size="50" font-weight="700" letter-spacing="-1.2" fill="#0f172a">osm2addr</text>
+  <text x="142" y="138" class="sans" font-size="18" fill="#4a5b73">One PBF in. Clean postal-address tables out.</text>
+
+  <g class="mono" font-size="13">
+    <rect x="140" y="160" width="58" height="28" rx="14" fill="#ffffff" stroke="#0891b2" stroke-opacity="0.45"/>
+    <text x="169" y="179" text-anchor="middle" fill="#0e7490">PBF</text>
+    <rect x="206" y="160" width="76" height="28" rx="14" fill="#ffffff" stroke="#0d9488" stroke-opacity="0.45"/>
+    <text x="244" y="179" text-anchor="middle" fill="#0f766e">addr:*</text>
+    <rect x="290" y="160" width="50" height="28" rx="14" fill="#ffffff" stroke="#2563eb" stroke-opacity="0.40"/>
+    <text x="315" y="179" text-anchor="middle" fill="#1d4ed8">DE</text>
+    <rect x="348" y="160" width="62" height="28" rx="14" fill="#ffffff" stroke="#d97706" stroke-opacity="0.40"/>
+    <text x="379" y="179" text-anchor="middle" fill="#b45309">JSON</text>
+  </g>
+
+  <text x="140" y="238" class="mono" font-size="14" fill="#5b6b82">411M nodes in  -&gt;  278K places out</text>
+  <text x="140" y="264" class="mono" font-size="14" fill="#74849a">deterministic IDs &#183; offline &#183; pure Go</text>
+
+  <g filter="url(#soft)">
+    <rect x="600" y="44" width="552" height="252" rx="16" fill="url(#card)" stroke="#d7e3f2"/>
+    <rect x="600" y="44" width="552" height="252" rx="16" fill="none" stroke="#0891b2" stroke-opacity="0.10"/>
+    <circle cx="628" cy="70" r="5" fill="#f87171"/>
+    <circle cx="648" cy="70" r="5" fill="#fbbf24"/>
+    <circle cx="668" cy="70" r="5" fill="#34d399"/>
+    <text x="1150" y="74" class="mono" font-size="12" text-anchor="end" fill="#64748b">osm2addr DE -- report</text>
+    <line x1="600" y1="88" x2="1152" y2="88" stroke="#e2e8f0"/>
+  </g>
+
+  <g class="mono" font-size="14">
+    <text x="628" y="118" fill="#64748b">OSM Source</text>
+    <text x="810" y="118" fill="#1d4ed8">[germany-latest.osm.pbf]</text>
+
+    <text x="628" y="148" fill="#64748b">Parsed Objects</text>
+    <text x="810" y="148" fill="#047857">[411.113.874]</text>
+
+    <text x="628" y="178" fill="#64748b">Addr Tags</text>
+    <text x="810" y="178" fill="#047857">[2.711.889]</text>
+
+    <text x="628" y="208" fill="#64748b">Uniform Drops</text>
+    <text x="810" y="208" fill="#b45309">[21.854]</text>
+
+    <text x="628" y="238" fill="#64748b">Places</text>
+    <text x="810" y="238" fill="#0e7490">[278.381]</text>
+
+    <text x="628" y="268" fill="#64748b">Total Time</text>
+    <text x="810" y="268" fill="#0f766e">[45.3s]</text>
+  </g>
+</svg>

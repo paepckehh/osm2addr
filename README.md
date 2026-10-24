@@ -1,11 +1,17 @@
 <div align="center">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/hero-light.svg">
+  <img src="docs/hero-light.svg" alt="osm2addr dashboard: turn an OpenStreetMap PBF extract into normalized postal-address tables" width="100%">
+</picture>
+
 # 🗺️ osm2addr
 
 **One PBF in. Clean postal-address tables out.**
 
 Turn an OpenStreetMap extract into deduplicated, normalized
-`postcode → city → street` mapping tables — deterministic place IDs,
+`postcode → city → street` mapping tables. Deterministic place IDs,
 auto-corrected city names, and a warning feed for everything that does not
 look like official postal data.
 
@@ -15,9 +21,15 @@ look like official postal data.
 [![golangci-lint](https://github.com/paepckehh/osm2addr/actions/workflows/golangci-lint.yml/badge.svg)](https://github.com/paepckehh/osm2addr/actions/workflows/golangci-lint.yml)
 [![License](https://img.shields.io/github/license/paepckehh/osm2addr)](https://github.com/paepckehh/osm2addr/blob/main/LICENSE)
 [![SemVer](https://img.shields.io/github/v/release/paepckehh/osm2addr)](https://github.com/paepckehh/osm2addr/releases/latest)
-[![built with nix](https://builtwithnix.org/badge.svg)](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=osm2addr)
+<br>[![built with nix](https://builtwithnix.org/badge.svg)](https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query=osm2addr)
 
 `go run paepcke.de/osm2addr/cmd/osm2addr@latest`
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/established-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/established-light.svg">
+  <img src="docs/established-light.svg" alt="osm2addr: established in 2025, 1+ years of continuous development on GitHub, 39+ tagged releases" width="100%">
+</picture>
 
 </div>
 
@@ -26,17 +38,21 @@ look like official postal data.
 ## 💡 Why
 
 Address validation databases want the boring part of OpenStreetMap: *this
-postcode belongs to this city, and this is the list of streets in it*. They do
-not want 400 million nodes, duplicate nodes with the same address, or
-`Hauptstr.` next to `Hauptstraße`.
+postcode belongs to this city, and this is the list of streets in it*. They
+do not want 400 million nodes, duplicate nodes with the same address, or
+`Hauptstr.` sitting next to `Hauptstraße`.
 
 `osm2addr` reads a `.osm.pbf` extract, keeps only complete `addr:*` nodes,
-normalizes them per country, deduplicates by a deterministic place ID and emits
-small JSON tables you can import directly into MongoDB, PostgreSQL, SQLite or
-whatever your validator uses.
+normalizes them per country, deduplicates by a deterministic place ID and
+emits small JSON tables you can import directly into MongoDB, PostgreSQL,
+SQLite or whatever your validator uses.
+
+```text
+.osm.pbf  →  addr:* nodes  →  normalize  →  dedup  →  JSON tables
+```
 
 Measured on a consumer laptop: roughly **400 million nodes in under 50
-seconds**, single binary, no network access.
+seconds**, one static binary, no network access.
 
 ## ✨ Features
 
@@ -68,6 +84,18 @@ Sibling projects with the same look and feel:
 [`certinfo`](https://paepcke.de/certinfo/), [`tlsinfo`](https://paepcke.de/tlsinfo/),
 [`dnsinfo`](https://paepcke.de/dnsinfo/).
 
+## ⚡ At a glance
+
+| Aspect | Detail |
+| :--- | :--- |
+| **Input** | An OpenStreetMap `.osm.pbf` extract |
+| **Output** | Up to 7 JSON tables, keyed by postcode / city / street and place ID |
+| **Throughput** | ~400M nodes in <50s on a consumer laptop |
+| **Place IDs** | 96-bit SHA-256 prefix, stable for a normalized address |
+| **Runtime** | Pure Go, static binary, fully offline |
+| **Country coverage** | `DE` today, country dispatch ready for more |
+| **License** | BSD-3-Clause; internal PBF stack Apache-2.0 |
+
 ## 🚀 Install
 
 **Go** (any platform with a toolchain):
@@ -97,7 +125,9 @@ nix-shell -p osm2addr
 environment.systemPackages = [ pkgs.osm2addr ];
 ```
 
-## 🎬 Quickstart
+## 🎬 Showtime
+
+Download a fresh extract and turn it into address tables:
 
 ```shell
 mkdir -p data
@@ -110,16 +140,17 @@ osm2addr DE data/germany-latest.osm.pbf
 Output lands in `./json/DE/`:
 
 ```text
-json/DE/addr.json                  postcode → city → street → true
-json/DE/addr2placeID.json          postcode → city → street → place ID
-json/DE/placeID2addr.json          place ID → {country, postcode, city, street}
-json/DE/warning.json               near-duplicates and non-preloaded pairs
-json/DE/corrected.json             auto-corrected city separators
-json/DE/error.preload.json         validated preload row errors
-json/DE/error.preload.trusted.json trusted preload row errors
+json/DE/addr.json                   postcode → city → street → true
+json/DE/addr2placeID.json           postcode → city → street → place ID
+json/DE/placeID2addr.json           place ID → {country, postcode, city, street}
+json/DE/warning.json                near-duplicates and non-preloaded pairs
+json/DE/corrected.json              auto-corrected city separators
+json/DE/error.preload.json          validated preload row errors
+json/DE/error.preload.trusted.json  trusted preload row errors
 ```
 
-The last two files are only written when the matching preload file exists.
+The two preload error files are only written when the matching preload file
+exists.
 
 Or use the Makefile shortcuts:
 
@@ -130,38 +161,10 @@ make run           # build and run with defaults
 make test          # race-enabled test suite
 ```
 
-## 🎛 Usage
-
-```text
-osm2addr [<COUNTRY_CODE> [<PATH_TO_PBF>]]
-```
-
-| Argument | Description | Default |
-| --- | --- | --- |
-| `COUNTRY_CODE` | Exactly 2 characters, uppercased internally (e.g. `DE`) | `DE` |
-| `PATH_TO_PBF` | OSM PBF extract, relative to the process CWD | `data/germany-latest.osm.pbf` |
-
-Output is always written to `json/<COUNTRY_CODE>/` relative to the process
-CWD, never next to the binary.
-
-The PBF file is opened exactly once after argument parsing. If it cannot be
-read, the process exits with a fatal error before any output is written.
-
-### 🐞 Debug logging
-
-Set `DEBUG` to any non-empty value except `0`, `false`, `no`, `off`:
-
-```shell
-DEBUG=1 osm2addr DE data/germany-latest.osm.pbf
-```
-
-Every dropped, corrected or added record becomes an `OSM:DEBUG:*` line.
-`DEBUG` only adds logging; it never changes what is written.
-
 ### 📊 Sample run
 
 ```text
-OSM:Version              # osm2addr v0.0.37 (commit deadbeef, built 2026-10-24T00:00:00Z)
+OSM:Version              # osm2addr v0.0.40 (commit deadbeef, built 2026-10-24T00:00:00Z)
 OSM:Startup               # 2026-10-24 09:23:45 +0000 UTC m=+0.000386754
 OSM:TargetCountry         # DE
 OSM:Debug                 # false
@@ -225,6 +228,34 @@ Nodes without an `addr:country` tag inherit the target country. A node that
 *has* an `addr:country` tag but whose value is malformed (not exactly two
 uppercase characters) is dropped instead of falling back, so a lowercase
 `at` cannot be silently imported as a German address.
+
+## 🎛 Usage
+
+```text
+osm2addr [<COUNTRY_CODE> [<PATH_TO_PBF>]]
+```
+
+| Argument | Description | Default |
+| --- | --- | --- |
+| `COUNTRY_CODE` | Exactly 2 characters, uppercased internally (e.g. `DE`) | `DE` |
+| `PATH_TO_PBF` | OSM PBF extract, relative to the process CWD | `data/germany-latest.osm.pbf` |
+
+Output is always written to `json/<COUNTRY_CODE>/` relative to the process
+CWD, never next to the binary.
+
+The PBF file is opened exactly once after argument parsing. If it cannot be
+read, the process exits with a fatal error before any output is written.
+
+### 🐞 Debug logging
+
+Set `DEBUG` to any non-empty value except `0`, `false`, `no`, `off`:
+
+```shell
+DEBUG=1 osm2addr DE data/germany-latest.osm.pbf
+```
+
+Every dropped, corrected or added record becomes an `OSM:DEBUG:*` line.
+`DEBUG` only adds logging; it never changes what is written.
 
 ## 📥 Preload data
 
@@ -342,7 +373,7 @@ with `github.com/destel/rill` for the blob → batch → object pipeline and
 parallelism from `runtime.GOMAXPROCS`. Only nodes and dense nodes are decoded;
 ways and relations are ignored.
 
-```
+```text
 internal/pbf       public Decoder, functional options, rill pipeline
 internal/decoder   blob/header parsing, PrimitiveBlock → model.Object
 internal/protobuf  generated osm.proto types (committed)
@@ -369,6 +400,8 @@ Adding a country: add a `case` to `uniform.go` and a `uniform<CC>.go` file
 returning the drop flag.
 
 ## 📦 Use it as a library
+
+The CLI is a thin wrapper. The pipeline is available as a small Go API:
 
 ```go
 package main
@@ -408,16 +441,22 @@ Public API ([godoc](https://pkg.go.dev/paepcke.de/osm2addr)):
 `Parse` writes the JSON tables relative to the working directory, exactly like
 the CLI. The `internal/` tree is not part of the public API.
 
+## 🧭 Roadmap
+
+- [ ] Additional country normalizers beside `DE`
+- [ ] Configurable preload schema via `Target` fields
+- [ ] Optional per-country street-level validation reports
+
 ## 🛠 Development
 
 ```shell
-make build       # go build with version/commit/buildtime ldflags
-make check       # gofmt + go vet + go fix + staticcheck ./...
-make test        # CGO_ENABLED=1 go test -race -count=1 ./...
-make update-de   # download the Germany extract into data/
-make update-dach # download the DACH extract into data/
-make update-eu   # download the Europe extract into data/
-make deps        # destructive: recreates go.mod/go.sum (avoid; dependabot owns deps)
+make build        # go build with version/commit/buildtime ldflags
+make check        # gofmt + go vet + go fix + staticcheck ./...
+make test         # CGO_ENABLED=1 go test -race -count=1 ./...
+make update-de    # download the Germany extract into data/
+make update-dach  # download the DACH extract into data/
+make update-eu    # download the Europe extract into data/
+make deps         # destructive: recreates go.mod/go.sum (avoid; dependabot owns deps)
 ```
 
 Tests are fast and parallel, and never touch `data/` or the repo `json/` tree
@@ -443,6 +482,7 @@ cmd/osm2addr/   CLI entrypoint
 *.go            pipeline, normalization, collector, writer
 internal/       PBF decoding stack (Apache-2.0)
 examples/       sample output and regeneration Makefile
+docs/           hero and established banner artwork (theme-aware SVG)
 data/           gitignored PBF/extract workspace
 ```
 
@@ -452,6 +492,8 @@ data/           gitignored PBF/extract workspace
 - Project home: [paepcke.de/osm2addr](https://paepcke.de/osm2addr/)
 - Sample output and run instructions: [examples/](examples/)
 - Preload example: [example-preload.csv](example-preload.csv)
+- Hero artwork: [dark](docs/hero-dark.svg) / [light](docs/hero-light.svg): dependency-free SVG dashboard (theme-aware `<picture>`)
+- Established banner: [dark](docs/established-dark.svg) / [light](docs/established-light.svg): 2025 to today, 39+ tagged releases (theme-aware `<picture>`)
 - Releases: [github.com/paepckehh/osm2addr/releases](https://github.com/paepckehh/osm2addr/releases)
 
 ## 🤝 Contributing
@@ -460,15 +502,9 @@ Yes, please! Open an issue or send a PR. Keep tests parallel and
 self-contained, and run the fixed flow above before submitting. See
 [AGENTS.md](AGENTS.md) for the repository conventions.
 
-## 🧭 Roadmap
-
-- [ ] Additional country normalizers beside `DE`
-- [ ] Configurable preload schema via `Target` fields
-- [ ] Optional per-country street-level validation reports
-
 ## 🛡 License
 
-[BSD 3-Clause](LICENSE). The `internal/` PBF decoding stack is Apache-2.0 —
+[BSD 3-Clause](LICENSE). The `internal/` PBF decoding stack is Apache-2.0,
 see [internal/LICENSE](internal/LICENSE).
 
 ## 📃 Citation
